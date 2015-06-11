@@ -1,0 +1,398 @@
+
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##s030_format_hairpin_sequences.r
+> ##2015-04-19 dmontaner@cipf.es
+> ##Format hairpin sequences from miRBase
+> 
+> ### NOTE:
+> ## Hairpins are in RNA sequence (U)
+> ## Alphabet is extended to Y K, N. This may be a problem for some aligners.
+> ## Mean length for a hairpin 103
+> 
+> date ()
+[1] "Thu Jun 11 13:39:35 2015"
+> Sys.info ()[c("nodename", "user")]
+   nodename        user 
+      "lap" "dmontaner" 
+> commandArgs ()
+[1] "/usr/lib/R/bin/exec/R"                                                                         
+[2] "-f"                                                                                            
+[3] "/home/dmontaner/trabajos_mios/2015/study_mirna_mirbase/scripts/s030_format_hairpin_sequences.r"
+[4] "--restore"                                                                                     
+[5] "--save"                                                                                        
+[6] "--no-readline"                                                                                 
+[7] "--no-save"                                                                                     
+[8] "--no-restore"                                                                                  
+> rm (list = ls ())
+> R.version.string ##"R version 3.1.0 (2014-04-10)"
+[1] "R version 3.2.0 (2015-04-16)"
+> library (Biostrings); packageDescription ("Biostrings", fields = "Version") #"2.32.0"
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from ‘package:stats’:
+
+    xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, as.vector, cbind, colnames,
+    do.call, duplicated, eval, evalq, Filter, Find, get, intersect,
+    is.unsorted, lapply, Map, mapply, match, mget, order, paste, pmax,
+    pmax.int, pmin, pmin.int, Position, rank, rbind, Reduce, rep.int,
+    rownames, sapply, setdiff, sort, table, tapply, union, unique,
+    unlist, unsplit
+
+Loading required package: S4Vectors
+Loading required package: stats4
+Loading required package: IRanges
+Loading required package: XVector
+[1] "2.36.1"
+> #help (package = Biostrings)
+> 
+> try (source (".job.r")); try (.job)
+
+.job.r has been sourced
+
+$name
+[1] "study_mirna_mirbase"
+
+$dir
+$dir$data
+[1] "~/datos/2015/study_mirna_mirbase"
+
+$dir$code
+[1] "~/trabajos/2015/study_mirna_mirbase"
+
+$dir$scripts
+[1] "~/trabajos/2015/study_mirna_mirbase/scripts"
+
+$dir$docs
+[1] "~/trabajos/2015/study_mirna_mirbase/documents"
+
+$dir$rawdat
+[1] "~/datos/2015/study_mirna_mirbase/data_raw"
+
+$dir$annotation
+[1] "~/datos/2015/study_mirna_mirbase/data_annotation"
+
+$dir$proces
+[1] "~/datos/2015/study_mirna_mirbase/data_processed"
+
+$dir$plots
+[1] "~/datos/2015/study_mirna_mirbase/results/plots"
+
+$dir$res
+[1] "~/datos/2015/study_mirna_mirbase/results/files"
+
+
+$testmode
+[1] FALSE
+
+$dec
+[1] "."
+
+$idsep
+[1] " /// "
+
+> 
+> options (width = 170)
+> 
+> 
+> ###READ FASTA
+> setwd (file.path (.job$dir$raw))
+> seqs <- readRNAStringSet (filepath = "hairpin.fa.gz")
+> class (seqs)
+[1] "RNAStringSet"
+attr(,"package")
+[1] "Biostrings"
+> seqs
+  A RNAStringSet instance of length 28645
+        width seq                                                                                                                                     names               
+    [1]    99 UACACUGUGGAUCCGGUGAGGUAGUAGGUUGUAUAGUUUGGAAUAUUACCACCGGUGAACUAUGCAAUUUUCUACCUUACCGGAGACAGAACUCUUCGA                                     cel-let-7 MI00000...
+    [2]    94 AUGCUUCCGGCCUGUUCCCUGAGACCUCAAGUGUGAGUGUACUAUUGAUGCUUCACACCUGGGCUCUCCGGGUACCAGGACGGUUUGAGCAGAU                                          cel-lin-4 MI00000...
+    [3]    96 AAAGUGACCGUACCGAGCUGCAUACUUCCUUACAUGCCCAUACUAUAUCAUAAAUGGAUAUGGAAUGUAAAGAAGUAUGUAGAACGGGGUGGUAGU                                        cel-mir-1 MI00000...
+    [4]    98 UAAACAGUAUACAGAAAGCCAUCAAAGCGGUGGUUGAUGUGUUGCAAAUUAUGACUUUCAUAUCACAGCCAGCUUUGAUGUGCUGCCUGUUGCACUGU                                      cel-mir-2 MI00000...
+    [5]    97 CGGACAAUGCUCGAGAGGCAGUGUGGUUAGCUGGUUGCAUAUUUCCUUGACAACGGCUACCUUCACUGCCACCCCGAACAUGUCGUCCAUCUUUGAA                                       cel-mir-34 MI0000...
+    ...   ... ...
+[28641]    86 UAUUAACUAUUACCUUUUAGCCGUUCACCCUCGCGAGUUGUACGAACGAGUUGUAGGAGGGCGAGGAGAGGAGGAAUUAAAUCACU                                                  ame-mir-9894 MI00...
+[28642]    70 CGCGAACGAUUCGAGAAUCGACCGACGAUGGAUAAACGUCGUGUCCGUUUCUCGUUUCGAAUCGAACGUA                                                                  ame-mir-9895 MI00...
+[28643]    89 GAUUUAUUCGACAAUAAUCGGACACAAUCGGCUAAAGGAUCGAAUACGAAGGAUUGAACCGAUGACGUCCGAUUAUUGCCGAACCGAUA                                               ame-mir-9896 MI00...
+[28644]    78 AGGCGGACAUUGGAUGAAUCCUACCCGGUGAGGUUUUUUUUUUCCAACCACACCGGACGAGAUUUCAUCCGACAGCAG                                                          ame-mir-3478 MI00...
+[28645]   172 AGAAGGACGUGGACGUGGAUGCCGAUAAGAAGGAGCCGUAAGGUACCGGGCGUGGGGAGGGCAGGG...CCCUGCCCUCCCCGCGCCCGGUACCUUACGGCUCCUUCUUAUCGGCACAGGGUUUCCGGGCUCUGG cre-MIR9897 MI003...
+> length (seqs)
+[1] 28645
+> 
+> ## sequence lengths
+> lon <- width (seqs)
+> names (lon) <- names (seqs)
+> lon[1:3]
+cel-let-7 MI0000001 Caenorhabditis elegans let-7 stem-loop cel-lin-4 MI0000002 Caenorhabditis elegans lin-4 stem-loop 
+                                                        99                                                         94 
+cel-mir-1 MI0000003 Caenorhabditis elegans miR-1 stem-loop 
+                                                        96 
+> summary (lon)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     39      76      91     103     111    2354 
+> 
+> 
+> ################################################################################
+> 
+> ## ALPHABET
+> alphabet (seqs)
+ [1] "A" "C" "G" "U" "M" "R" "W" "S" "Y" "K" "V" "H" "D" "B" "N" "-" "+" "."
+> 
+> ###grep ("Y", seqs, value = TRUE)
+> names (grep ("Y", seqs, value = TRUE))
+ [1] "zma-MIR160a MI0001465 Zea mays miR160a stem-loop"        "zma-MIR172a MI0001493 Zea mays miR172a stem-loop"       
+ [3] "zma-MIR166n MI0013197 Zea mays miR166n stem-loop"        "mdm-MIR156a MI0022971 Malus domestica miR156a stem-loop"
+ [5] "mdm-MIR156b MI0022972 Malus domestica miR156b stem-loop" "mdm-MIR156d MI0022974 Malus domestica miR156d stem-loop"
+ [7] "mdm-MIR156k MI0022981 Malus domestica miR156k stem-loop" "mdm-MIR156l MI0022982 Malus domestica miR156l stem-loop"
+ [9] "mdm-MIR156t MI0022990 Malus domestica miR156t stem-loop" "mdm-MIR164c MI0023013 Malus domestica miR164c stem-loop"
+[11] "mdm-MIR164e MI0023015 Malus domestica miR164e stem-loop" "mdm-MIR166h MI0023024 Malus domestica miR166h stem-loop"
+[13] "mdm-MIR168b MI0023037 Malus domestica miR168b stem-loop" "mdm-MIR171a MI0023042 Malus domestica miR171a stem-loop"
+[15] "mdm-MIR171j MI0023051 Malus domestica miR171j stem-loop" "mdm-MIR172a MI0023056 Malus domestica miR172a stem-loop"
+[17] "mdm-MIR172l MI0023067 Malus domestica miR172l stem-loop" "mdm-MIR172m MI0023068 Malus domestica miR172m stem-loop"
+[19] "mdm-MIR398a MI0023102 Malus domestica miR398a stem-loop" "mdm-MIR858 MI0023174 Malus domestica miR858 stem-loop"  
+> 
+> ## non standard letters
+> malos <- NULL
+> ##
+> system.time ({
++ for (l in setdiff (alphabet (seqs), c ("A", "C", "G", "U"))) {
++     cat  ("\n========== ", l, " =========\n")
++     print (l)
++     pos <- grep (l, seqs, fixed = TRUE)  ##fixed = TRUE so that + and . are not taken as part of a regular expression
++     print (length (pos))
++     malos <- c (malos, pos)
++ }
++ })
+
+==========  M  =========
+[1] "M"
+[1] 7
+
+==========  R  =========
+[1] "R"
+[1] 20
+
+==========  W  =========
+[1] "W"
+[1] 8
+
+==========  S  =========
+[1] "S"
+[1] 1
+
+==========  Y  =========
+[1] "Y"
+[1] 20
+
+==========  K  =========
+[1] "K"
+[1] 10
+
+==========  V  =========
+[1] "V"
+[1] 0
+
+==========  H  =========
+[1] "H"
+[1] 0
+
+==========  D  =========
+[1] "D"
+[1] 0
+
+==========  B  =========
+[1] "B"
+[1] 1
+
+==========  N  =========
+[1] "N"
+[1] 39
+
+==========  -  =========
+[1] "-"
+[1] 0
+
+==========  +  =========
+[1] "+"
+[1] 0
+
+==========  .  =========
+[1] "."
+[1] 0
+   user  system elapsed 
+  0.233   0.000   0.233 
+> table (duplicated (malos)) ## some duplicates
+
+FALSE  TRUE 
+   97     9 
+> malos <- unique (malos)
+> length (malos)
+[1] 97
+> sort (names (seqs[malos]))
+ [1] "ahy-MIR3508 MI0015341 Arachis hypogaea miR3508 stem-loop"             "ahy-MIR3520 MI0015353 Arachis hypogaea miR3520 stem-loop"            
+ [3] "bfl-mir-182c MI0017661 Branchiostoma floridae miR-182c stem-loop"     "bna-MIR396a MI0005773 Brassica napus miR396a stem-loop"              
+ [5] "bol-MIR824 MI0006438 Brassica oleracea miR824 stem-loop"              "ccr-mir-206 MI0023366 Cyprinus carpio miR-206 stem-loop"             
+ [7] "cre-MIR1144a MI0006205 Chlamydomonas reinhardtii miR1144a stem-loop"  "cre-MIR1148 MI0006209 Chlamydomonas reinhardtii miR1148 stem-loop"   
+ [9] "cre-MIR1158 MI0006220 Chlamydomonas reinhardtii miR1158 stem-loop"    "cre-MIR1165 MI0006226 Chlamydomonas reinhardtii miR1165 stem-loop"   
+[11] "cre-MIR907 MI0005700 Chlamydomonas reinhardtii miR907 stem-loop"      "csi-MIR167c MI0016696 Citrus sinensis miR167c stem-loop"             
+[13] "csi-MIR477a MI0016718 Citrus sinensis miR477a stem-loop"              "csi-MIR477c MI0016720 Citrus sinensis miR477c stem-loop"             
+[15] "dps-mir-2517b MI0011648 Drosophila pseudoobscura miR-2517b stem-loop" "ggo-mir-3615 MI0020829 Gorilla gorilla miR-3615 stem-loop"           
+[17] "ghr-MIR7489 MI0024173 Gossypium hirsutum miR7489 stem-loop"           "hbr-MIR6169 MI0021478 Hevea brasiliensis miR6169 stem-loop"          
+[19] "hco-mir-87b MI0020024 Haemonchus contortus miR-87b stem-loop"         "hvu-MIR1130 MI0021488 Hordeum vulgare miR1130 stem-loop"             
+[21] "hvu-MIR166a MI0016455 Hordeum vulgare miR166 stem-loop"               "hvu-MIR166c MI0018212 Hordeum vulgare miR166c stem-loop"             
+[23] "hvu-MIR5049b MI0021487 Hordeum vulgare miR5049b stem-loop"            "hvu-MIR6197 MI0021513 Hordeum vulgare miR6197 stem-loop"             
+[25] "hvu-MIR6202 MI0021520 Hordeum vulgare miR6202 stem-loop"              "mdm-MIR156ae MI0023001 Malus domestica miR156ae stem-loop"           
+[27] "mdm-MIR156a MI0022971 Malus domestica miR156a stem-loop"              "mdm-MIR156b MI0022972 Malus domestica miR156b stem-loop"             
+[29] "mdm-MIR156d MI0022974 Malus domestica miR156d stem-loop"              "mdm-MIR156g MI0022977 Malus domestica miR156g stem-loop"             
+[31] "mdm-MIR156i MI0022979 Malus domestica miR156i stem-loop"              "mdm-MIR156k MI0022981 Malus domestica miR156k stem-loop"             
+[33] "mdm-MIR156l MI0022982 Malus domestica miR156l stem-loop"              "mdm-MIR156t MI0022990 Malus domestica miR156t stem-loop"             
+[35] "mdm-MIR156w MI0022993 Malus domestica miR156w stem-loop"              "mdm-MIR159b MI0023003 Malus domestica miR159b stem-loop"             
+[37] "mdm-MIR164b MI0023012 Malus domestica miR164b stem-loop"              "mdm-MIR164c MI0023013 Malus domestica miR164c stem-loop"             
+[39] "mdm-MIR164e MI0023015 Malus domestica miR164e stem-loop"              "mdm-MIR166b MI0023018 Malus domestica miR166b stem-loop"             
+[41] "mdm-MIR166h MI0023024 Malus domestica miR166h stem-loop"              "mdm-MIR167a MI0023026 Malus domestica miR167a stem-loop"             
+[43] "mdm-MIR167e MI0023030 Malus domestica miR167e stem-loop"              "mdm-MIR167h MI0023033 Malus domestica miR167h stem-loop"             
+[45] "mdm-MIR167i MI0023034 Malus domestica miR167i stem-loop"              "mdm-MIR168b MI0023037 Malus domestica miR168b stem-loop"             
+[47] "mdm-MIR169e MI0023171 Malus domestica miR169e stem-loop"              "mdm-MIR169f MI0023172 Malus domestica miR169f stem-loop"             
+[49] "mdm-MIR171a MI0023042 Malus domestica miR171a stem-loop"              "mdm-MIR171j MI0023051 Malus domestica miR171j stem-loop"             
+[51] "mdm-MIR172a MI0023056 Malus domestica miR172a stem-loop"              "mdm-MIR172l MI0023067 Malus domestica miR172l stem-loop"             
+[53] "mdm-MIR172m MI0023068 Malus domestica miR172m stem-loop"              "mdm-MIR319c MI0023162 Malus domestica miR319c stem-loop"             
+[55] "mdm-MIR390d MI0023076 Malus domestica miR390d stem-loop"              "mdm-MIR395b MI0023085 Malus domestica miR395b stem-loop"             
+[57] "mdm-MIR395h MI0023091 Malus domestica miR395h stem-loop"              "mdm-MIR396c MI0023095 Malus domestica miR396c stem-loop"             
+[59] "mdm-MIR396d MI0023096 Malus domestica miR396d stem-loop"              "mdm-MIR396e MI0023097 Malus domestica miR396e stem-loop"             
+[61] "mdm-MIR396g MI0023099 Malus domestica miR396g stem-loop"              "mdm-MIR397a MI0023100 Malus domestica miR397a stem-loop"             
+[63] "mdm-MIR398a MI0023102 Malus domestica miR398a stem-loop"              "mdm-MIR399c MI0023107 Malus domestica miR399c stem-loop"             
+[65] "mdm-MIR408c MI0023136 Malus domestica miR408c stem-loop"              "mdm-MIR477b MI0023124 Malus domestica miR477b stem-loop"             
+[67] "mdm-MIR482a MI0010695 Malus domestica miR482a stem-loop"              "mdm-MIR482b MI0023126 Malus domestica miR482b stem-loop"             
+[69] "mdm-MIR482c MI0023127 Malus domestica miR482c stem-loop"              "mdm-MIR482d MI0023143 Malus domestica miR482d stem-loop"             
+[71] "mdm-MIR7121c MI0023146 Malus domestica miR7121c stem-loop"            "mdm-MIR7123a MI0023154 Malus domestica miR7123a stem-loop"           
+[73] "mdm-MIR7123b MI0023155 Malus domestica miR7123b stem-loop"            "mdm-MIR7127b MI0023169 Malus domestica miR7127b stem-loop"           
+[75] "mdm-MIR858 MI0023174 Malus domestica miR858 stem-loop"                "mja-mir-6493 MI0022070 Marsupenaeus japonicus miR-6493 stem-loop"    
+[77] "mml-mir-1255a MI0020868 Macaca mulatta miR-1255a stem-loop"           "ola-mir-430c-4 MI0013015 Oryzias latipes miR-430c-4 stem-loop"       
+[79] "ola-mir-430c-6 MI0013022 Oryzias latipes miR-430c-6 stem-loop"        "pgi-MIR6141 MI0021315 Panax ginseng miR6141 stem-loop"               
+[81] "ppc-mir-2260 MI0011186 Pristionchus pacificus miR-2260 stem-loop"     "ptr-mir-3664 MI0020610 Pan troglodytes miR-3664 stem-loop"           
+[83] "ptr-mir-610 MI0008810 Pan troglodytes miR-610 stem-loop"              "rgl-MIR7803a MI0025456 Rehmannia glutinosa miR7803a stem-loop"       
+[85] "rno-mir-215 MI0003482 Rattus norvegicus miR-215 stem-loop"            "sja-mir-277 MI0015296 Schistosoma japonicum miR-277 stem-loop"       
+[87] "smo-MIR1114 MI0006101 Selaginella moellendorffii miR1114 stem-loop"   "ssp-MIR156 MI0018191 Saccharum sp. miR156 stem-loop"                 
+[89] "tae-MIR1139 MI0006201 Triticum aestivum miR1139 stem-loop"            "tae-MIR5175 MI0030402 Triticum aestivum miR5175 stem-loop"           
+[91] "tae-MIR530 MI0031529 Triticum aestivum miR530 stem-loop"              "zma-MIR160a MI0001465 Zea mays miR160a stem-loop"                    
+[93] "zma-MIR166b MI0001488 Zea mays miR166b stem-loop"                     "zma-MIR166g MI0001487 Zea mays miR166g stem-loop"                    
+[95] "zma-MIR166n MI0013197 Zea mays miR166n stem-loop"                     "zma-MIR167i MI0001823 Zea mays miR167i stem-loop"                    
+[97] "zma-MIR172a MI0001493 Zea mays miR172a stem-loop"                    
+> 
+> grep ("hsa", names (seqs[malos]))  ## OK NO HUMAN
+integer(0)
+> grep ("mus", names (seqs[malos]))  ## OK NO mouse
+integer(0)
+> 
+> 
+> ## ELIMINATE sequences with non standard letters
+> table (malos %in% 1:length (seqs))
+
+TRUE 
+  97 
+> seqs <- seqs[-malos]
+> length (seqs)
+[1] 28548
+> 
+> ################################################################################
+> 
+> ### CONVERT TO DNA
+> dna <- DNAStringSet (seqs)
+> class (dna)
+[1] "DNAStringSet"
+attr(,"package")
+[1] "Biostrings"
+> dna
+  A DNAStringSet instance of length 28548
+        width seq                                                                                                                                     names               
+    [1]    99 TACACTGTGGATCCGGTGAGGTAGTAGGTTGTATAGTTTGGAATATTACCACCGGTGAACTATGCAATTTTCTACCTTACCGGAGACAGAACTCTTCGA                                     cel-let-7 MI00000...
+    [2]    94 ATGCTTCCGGCCTGTTCCCTGAGACCTCAAGTGTGAGTGTACTATTGATGCTTCACACCTGGGCTCTCCGGGTACCAGGACGGTTTGAGCAGAT                                          cel-lin-4 MI00000...
+    [3]    96 AAAGTGACCGTACCGAGCTGCATACTTCCTTACATGCCCATACTATATCATAAATGGATATGGAATGTAAAGAAGTATGTAGAACGGGGTGGTAGT                                        cel-mir-1 MI00000...
+    [4]    98 TAAACAGTATACAGAAAGCCATCAAAGCGGTGGTTGATGTGTTGCAAATTATGACTTTCATATCACAGCCAGCTTTGATGTGCTGCCTGTTGCACTGT                                      cel-mir-2 MI00000...
+    [5]    97 CGGACAATGCTCGAGAGGCAGTGTGGTTAGCTGGTTGCATATTTCCTTGACAACGGCTACCTTCACTGCCACCCCGAACATGTCGTCCATCTTTGAA                                       cel-mir-34 MI0000...
+    ...   ... ...
+[28544]    86 TATTAACTATTACCTTTTAGCCGTTCACCCTCGCGAGTTGTACGAACGAGTTGTAGGAGGGCGAGGAGAGGAGGAATTAAATCACT                                                  ame-mir-9894 MI00...
+[28545]    70 CGCGAACGATTCGAGAATCGACCGACGATGGATAAACGTCGTGTCCGTTTCTCGTTTCGAATCGAACGTA                                                                  ame-mir-9895 MI00...
+[28546]    89 GATTTATTCGACAATAATCGGACACAATCGGCTAAAGGATCGAATACGAAGGATTGAACCGATGACGTCCGATTATTGCCGAACCGATA                                               ame-mir-9896 MI00...
+[28547]    78 AGGCGGACATTGGATGAATCCTACCCGGTGAGGTTTTTTTTTTCCAACCACACCGGACGAGATTTCATCCGACAGCAG                                                          ame-mir-3478 MI00...
+[28548]   172 AGAAGGACGTGGACGTGGATGCCGATAAGAAGGAGCCGTAAGGTACCGGGCGTGGGGAGGGCAGGG...CCCTGCCCTCCCCGCGCCCGGTACCTTACGGCTCCTTCTTATCGGCACAGGGTTTCCGGGCTCTGG cre-MIR9897 MI003...
+> 
+> table (as.character (dna) == gsub ("U", "T", as.character (seqs)))  ## OK
+
+ TRUE 
+28548 
+> 
+> ################################################################################
+> 
+> ### KEEP JUST HUMANS
+> humanos <- grep ("hsa", names (dna))
+> length (humanos)
+[1] 1881
+> 
+> dnah <- dna[humanos]
+> length (dnah)
+[1] 1881
+> 
+> 
+> ## SAVE 
+> setwd (.job$dir$proces)
+> 
+> save (dna,  file = "haiprin_dna.RData")
+> save (dnah, file = "haiprin_dna_human.RData")
+> 
+> writeXStringSet (dna,  filepath = "haiprin_dna.fa")
+> writeXStringSet (dnah, filepath = "haiprin_dna_human.fa")
+> 
+> ###EXIT
+> warnings ()
+NULL
+> sessionInfo ()
+R version 3.2.0 (2015-04-16)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 14.04.2 LTS
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=es_ES.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=es_ES.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=es_ES.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=es_ES.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats4    parallel  stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] Biostrings_2.36.1   XVector_0.8.0       IRanges_2.2.1       S4Vectors_0.6.0     BiocGenerics_0.14.0
+
+loaded via a namespace (and not attached):
+[1] zlibbioc_1.14.0
+> q ("no")
+> proc.time()
+   user  system elapsed 
+  3.386   0.058   3.990 

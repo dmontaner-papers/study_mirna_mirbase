@@ -1,0 +1,911 @@
+
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##s020_explore_gff_data.r
+> ##2015-02-28 dmontaner@cipf.es
+> ##Study of miRBase sequences
+> 
+> ##gff-version 3
+> ##date 2014-6-22
+> #
+> # Chromosomal coordinates of Homo sapiens microRNAs
+> # microRNAs:               miRBase v21
+> # genome-build-id:         GRCh38
+> # genome-build-accession:  NCBI_Assembly:GCA_000001405.15
+> #
+> # Hairpin precursor sequences have type "miRNA_primary_transcript". 
+> # Note, these sequences do not represent the full primary transcript, 
+> # rather a predicted stem-loop portion that includes the precursor 
+> # miRNA. Mature sequences have type "miRNA".
+> #
+> 
+> ## GTF format: 
+> ## http://www.ensembl.org/info/website/upload/gff.html
+> 
+> ## 1. seqname - name of the chromosome or scaffold; chromosome names can be given
+> ##    with or without the 'chr' prefix.
+> ##    Important note: the seqname must be one used within Ensembl, i.e. a standard
+> ##    chromosome name or an Ensembl identifier such as a scaffold ID, without any
+> ##    additional content such as species or assembly. See the example GFF output below.
+> ## 2. source - name of the program that generated this feature, or the data source
+> ##    (database or project name)
+> ## 3. feature - feature type name, e.g. Gene, Variation, Similarity
+> ## 4. start - Start position of the feature, with sequence numbering starting at 1.
+> ## 5. end - End position of the feature, with sequence numbering starting at 1.
+> ## 6. score - A floating point value.
+> ## 7. strand - defined as + (forward) or - (reverse).
+> ## 8. frame - One of '0', '1' or '2'. '0' indicates that the first base of the
+> ##    feature is the first base of a codon, '1' that the second base is the first
+> ##    base of a codon, and so on.
+> ## 9. attribute - A semicolon-separated list of tag-value pairs, providing
+> ##    additional information about each feature.
+> 
+> date ()
+[1] "Thu Jun 11 13:39:20 2015"
+> Sys.info ()[c("nodename", "user")]
+   nodename        user 
+      "lap" "dmontaner" 
+> commandArgs ()
+[1] "/usr/lib/R/bin/exec/R"                                                                 
+[2] "-f"                                                                                    
+[3] "/home/dmontaner/trabajos_mios/2015/study_mirna_mirbase/scripts/s020_explore_gff_data.r"
+[4] "--restore"                                                                             
+[5] "--save"                                                                                
+[6] "--no-readline"                                                                         
+[7] "--no-save"                                                                             
+[8] "--no-restore"                                                                          
+> rm (list = ls ())
+> R.version.string ##"R version 3.2.0 (2015-04-16)"
+[1] "R version 3.2.0 (2015-04-16)"
+> 
+> try (source (".job.r")); try (.job)
+
+.job.r has been sourced
+
+$name
+[1] "study_mirna_mirbase"
+
+$dir
+$dir$data
+[1] "~/datos/2015/study_mirna_mirbase"
+
+$dir$code
+[1] "~/trabajos/2015/study_mirna_mirbase"
+
+$dir$scripts
+[1] "~/trabajos/2015/study_mirna_mirbase/scripts"
+
+$dir$docs
+[1] "~/trabajos/2015/study_mirna_mirbase/documents"
+
+$dir$rawdat
+[1] "~/datos/2015/study_mirna_mirbase/data_raw"
+
+$dir$annotation
+[1] "~/datos/2015/study_mirna_mirbase/data_annotation"
+
+$dir$proces
+[1] "~/datos/2015/study_mirna_mirbase/data_processed"
+
+$dir$plots
+[1] "~/datos/2015/study_mirna_mirbase/results/plots"
+
+$dir$res
+[1] "~/datos/2015/study_mirna_mirbase/results/files"
+
+
+$testmode
+[1] FALSE
+
+$dec
+[1] "."
+
+$idsep
+[1] " /// "
+
+> 
+> options (width = 170)
+> 
+> 
+> ###DATA
+> datos <- read.table (file.path (.job$dir$raw, "hsa.gff3"), as.is = TRUE)
+> colnames (datos) <- c ("chr", "source", "feature", "sta", "end", "score", "strand", "frame", "attribute")
+> sapply (datos, class)
+        chr      source     feature         sta         end       score      strand       frame   attribute 
+"character" "character" "character"   "integer"   "integer" "character" "character" "character" "character" 
+> dim (datos)
+[1] 4694    9
+> datos[1:3,]
+   chr source                  feature   sta   end score strand frame                                                                      attribute
+1 chr1      . miRNA_primary_transcript 17369 17436     .      -     .                               ID=MI0022705;Alias=MI0022705;Name=hsa-mir-6859-1
+2 chr1      .                    miRNA 17409 17431     .      -     . ID=MIMAT0027618;Alias=MIMAT0027618;Name=hsa-miR-6859-5p;Derives_from=MI0022705
+3 chr1      .                    miRNA 17369 17391     .      -     . ID=MIMAT0027619;Alias=MIMAT0027619;Name=hsa-miR-6859-3p;Derives_from=MI0022705
+> 
+> summary (datos)
+     chr               source            feature               sta                 end               score              strand             frame          
+ Length:4694        Length:4694        Length:4694        Min.   :    17052   Min.   :    17074   Length:4694        Length:4694        Length:4694       
+ Class :character   Class :character   Class :character   1st Qu.: 33353966   1st Qu.: 33354003   Class :character   Class :character   Class :character  
+ Mode  :character   Mode  :character   Mode  :character   Median : 63786034   Median : 63786081   Mode  :character   Mode  :character   Mode  :character  
+                                                          Mean   : 76742484   Mean   : 76742529                                                           
+                                                          3rd Qu.:112112812   3rd Qu.:112112883                                                           
+                                                          Max.   :248826418   Max.   :248826443                                                           
+  attribute        
+ Length:4694       
+ Class :character  
+ Mode  :character  
+                   
+                   
+                   
+> 
+> ################################################################################
+> 
+> ## Some descriptive
+> sort (table (datos[,"chr"]))
+
+ chrY chr21 chr18 chr13 chr20 chr22  chr4 chr15  chr6 chr10  chr5 chr12  chr7 chr16  chr9  chr8  chr3 chr11 chr14  chr2 chr17  chrX chr19  chr1 
+    4    68    83    97   118   121   144   162   162   164   178   186   198   200   208   217   230   256   259   276   286   310   374   393 
+> table (datos[,"strand"])
+
+   -    + 
+2280 2414 
+> table (datos[,"chr"], datos[,"strand"])
+       
+          -   +
+  chr1  200 193
+  chr10  99  65
+  chr11 134 122
+  chr12  79 107
+  chr13  41  56
+  chr14  73 186
+  chr15  90  72
+  chr16  79 121
+  chr17 174 112
+  chr18  39  44
+  chr19  94 280
+  chr2  143 133
+  chr20  46  72
+  chr21  19  49
+  chr22  52  69
+  chr3  118 112
+  chr4   67  77
+  chr5  109  69
+  chr6   66  96
+  chr7  111  87
+  chr8  132  85
+  chr9  111  97
+  chrX  204 106
+  chrY    0   4
+> 
+> table  (datos[,"feature"])
+
+                   miRNA miRNA_primary_transcript 
+                    2813                     1881 
+> unique (datos[,"feature"])
+[1] "miRNA_primary_transcript" "miRNA"                   
+> 
+> mat <- datos[datos$feature== "miRNA",                    c ("chr", "sta", "end", "strand", "attribute")]
+> hpi <- datos[datos$feature== "miRNA_primary_transcript", c ("chr", "sta", "end", "strand", "attribute")]
+> 
+> dim (mat)
+[1] 2813    5
+> dim (hpi)
+[1] 1881    5
+> 
+> mat[1:3,]
+   chr   sta   end strand                                                                      attribute
+2 chr1 17409 17431      - ID=MIMAT0027618;Alias=MIMAT0027618;Name=hsa-miR-6859-5p;Derives_from=MI0022705
+3 chr1 17369 17391      - ID=MIMAT0027619;Alias=MIMAT0027619;Name=hsa-miR-6859-3p;Derives_from=MI0022705
+5 chr1 30438 30458      +    ID=MIMAT0005890;Alias=MIMAT0005890;Name=hsa-miR-1302;Derives_from=MI0006363
+> hpi[1:3,]
+   chr    sta    end strand                                        attribute
+1 chr1  17369  17436      - ID=MI0022705;Alias=MI0022705;Name=hsa-mir-6859-1
+4 chr1  30366  30503      + ID=MI0006363;Alias=MI0006363;Name=hsa-mir-1302-2
+6 chr1 187891 187958      - ID=MI0026420;Alias=MI0026420;Name=hsa-mir-6859-2
+> 
+> ################################################################################
+> 
+> ## Explore duplicates
+> 
+> table (duplicated (mat)) ## OK no dups
+
+FALSE 
+ 2813 
+> table (duplicated (hpi)) ## OK no dups
+
+FALSE 
+ 1881 
+> 
+> table (duplicated (mat[,c("chr", "sta", "end")]))           ## Duplicated position
+
+FALSE  TRUE 
+ 2803    10 
+> table (duplicated (mat[,c("chr", "sta", "end", "strand")])) ## But not the strand
+
+FALSE 
+ 2813 
+> 
+> table (duplicated (hpi[,c("chr", "sta", "end")]))    ## Duplicated position
+
+FALSE  TRUE 
+ 1870    11 
+> table (duplicated (hpi[,c("chr", "sta", "strand")])) ## But not the strand
+
+FALSE 
+ 1881 
+> 
+> ## duplicated in mature
+> dup.mat <- mat[duplicated (mat[,c("chr", "sta", "end")]),]
+> touse <- (mat$chr %in% dup.mat$chr) & (mat$sta %in% dup.mat$sta) & (mat$end %in% dup.mat$end)
+> 
+> dup.mat <- mat[touse,]
+> orden <- order (dup.mat$chr, dup.mat$sta, dup.mat$strand)
+> dup.mat <- dup.mat[orden,]
+> dup.mat
+       chr       sta       end strand                                                                          attribute
+900  chr12  69584744  69584765      -     ID=MIMAT0019225;Alias=MIMAT0019225;Name=hsa-miR-3913-3p;Derives_from=MI0016417
+902  chr12  69584744  69584765      +   ID=MIMAT0018187_1;Alias=MIMAT0018187;Name=hsa-miR-3913-5p;Derives_from=MI0016418
+899  chr12  69584780  69584801      -     ID=MIMAT0018187;Alias=MIMAT0018187;Name=hsa-miR-3913-5p;Derives_from=MI0016417
+903  chr12  69584780  69584801      +   ID=MIMAT0019225_1;Alias=MIMAT0019225;Name=hsa-miR-3913-3p;Derives_from=MI0016418
+1809 chr17  30117095  30117117      -     ID=MIMAT0022731;Alias=MIMAT0022731;Name=hsa-miR-3184-3p;Derives_from=MI0014226
+1805 chr17  30117095  30117117      +      ID=MIMAT0004748;Alias=MIMAT0004748;Name=hsa-miR-423-5p;Derives_from=MI0001445
+2244 chr19  45674978  45674999      -     ID=MIMAT0022736;Alias=MIMAT0022736;Name=hsa-miR-642b-5p;Derives_from=MI0016685
+2241 chr19  45674978  45674999      +     ID=MIMAT0020924;Alias=MIMAT0020924;Name=hsa-miR-642a-3p;Derives_from=MI0003657
+2520  chr2  64340809  64340829      -    ID=MIMAT0030413;Alias=MIMAT0030413;Name=hsa-miR-4433b-5p;Derives_from=MI0025511
+2523  chr2  64340809  64340829      +    ID=MIMAT0018949;Alias=MIMAT0018949;Name=hsa-miR-4433a-3p;Derives_from=MI0016773
+2747 chr20   3917541   3917563      -        ID=MIMAT0007402;Alias=MIMAT0007402;Name=hsa-miR-103b;Derives_from=MI0007262
+2745 chr20   3917541   3917563      +     ID=MIMAT0000101;Alias=MIMAT0000101;Name=hsa-miR-103a-3p;Derives_from=MI0000108
+3559  chr5 168560904 168560926      -   ID=MIMAT0000101_1;Alias=MIMAT0000101;Name=hsa-miR-103a-3p;Derives_from=MI0000109
+3561  chr5 168560904 168560926      +      ID=MIMAT0007402_1;Alias=MIMAT0007402;Name=hsa-miR-103b;Derives_from=MI0007261
+3799  chr7  30289854  30289875      -   ID=MIMAT0022737;Alias=MIMAT0022737;Name=hsa-miR-550b-2-5p;Derives_from=MI0016686
+3796  chr7  30289854  30289875      +   ID=MIMAT0003257_1;Alias=MIMAT0003257;Name=hsa-miR-550a-3p;Derives_from=MI0003600
+3805  chr7  32733041  32733062      - ID=MIMAT0022737_1;Alias=MIMAT0022737;Name=hsa-miR-550b-2-5p;Derives_from=MI0016687
+3802  chr7  32733041  32733062      +   ID=MIMAT0003257_2;Alias=MIMAT0003257;Name=hsa-miR-550a-3p;Derives_from=MI0003601
+4487  chrX  74218587  74218608      -     ID=MIMAT0004955;Alias=MIMAT0004955;Name=hsa-miR-374b-5p;Derives_from=MI0005566
+4491  chrX  74218587  74218608      +     ID=MIMAT0022735;Alias=MIMAT0022735;Name=hsa-miR-374c-3p;Derives_from=MI0016684
+> 
+> 
+> ## duplicated in hairpin
+> dup.hpi <- hpi[duplicated (hpi[,c("chr", "sta", "end")]),]
+> touse <- (hpi$chr %in% dup.hpi$chr) & (hpi$sta %in% dup.hpi$sta) & (hpi$end %in% dup.hpi$end)
+> 
+> dup.hpi <- hpi[touse,]
+> orden <- order (dup.hpi$chr, dup.hpi$sta, dup.hpi$strand)
+> dup.hpi <- dup.hpi[orden,]
+> dup.hpi
+       chr       sta       end strand                                         attribute
+273   chr1 170151378 170151462      -  ID=MI0014134;Alias=MI0014134;Name=hsa-mir-3119-1
+275   chr1 170151378 170151462      +  ID=MI0014135;Alias=MI0014135;Name=hsa-mir-3119-2
+502  chr10 101601417 101601497      -  ID=MI0014187;Alias=MI0014187;Name=hsa-mir-3158-2
+499  chr10 101601417 101601497      +  ID=MI0014186;Alias=MI0014186;Name=hsa-mir-3158-1
+886  chr12  64622509  64622605      -    ID=MI0016688;Alias=MI0016688;Name=hsa-mir-548z
+888  chr12  64622509  64622605      +    ID=MI0003630;Alias=MI0003630;Name=hsa-mir-548c
+1939 chr17  67471489  67471585      -  ID=MI0003671;Alias=MI0003671;Name=hsa-mir-548d-2
+1942 chr17  67471489  67471585      + ID=MI0016690;Alias=MI0016690;Name=hsa-mir-548aa-2
+2602  chr2 151368334 151368411      -  ID=MI0017416;Alias=MI0017416;Name=hsa-mir-4773-2
+2604  chr2 151368334 151368411      +  ID=MI0017415;Alias=MI0017415;Name=hsa-mir-4773-1
+2650  chr2 206783234 206783308      -  ID=MI0014147;Alias=MI0014147;Name=hsa-mir-3130-1
+2653  chr2 206783234 206783308      +  ID=MI0014148;Alias=MI0014148;Name=hsa-mir-3130-2
+2670  chr2 212926257 212926336      -  ID=MI0017420;Alias=MI0017420;Name=hsa-mir-4776-2
+2667  chr2 212926257 212926336      +  ID=MI0017419;Alias=MI0017419;Name=hsa-mir-4776-1
+3797  chr7  30289794  30289890      -  ID=MI0016686;Alias=MI0016686;Name=hsa-mir-550b-1
+3794  chr7  30289794  30289890      +  ID=MI0003600;Alias=MI0003600;Name=hsa-mir-550a-1
+3803  chr7  32732981  32733077      -  ID=MI0016687;Alias=MI0016687;Name=hsa-mir-550b-2
+3800  chr7  32732981  32733077      +  ID=MI0003601;Alias=MI0003601;Name=hsa-mir-550a-2
+4094  chr8 123348034 123348130      -  ID=MI0003668;Alias=MI0003668;Name=hsa-mir-548d-1
+4097  chr8 123348034 123348130      + ID=MI0016689;Alias=MI0016689;Name=hsa-mir-548aa-1
+4472  chrX  55451495  55451582      -  ID=MI0016906;Alias=MI0016906;Name=hsa-mir-4536-1
+4469  chrX  55451495  55451582      +  ID=MI0019149;Alias=MI0019149;Name=hsa-mir-4536-2
+> 
+> ################################################################################
+> 
+> ## FORMAT IDS
+> spl <- strsplit (mat$attribute, split = ";")
+> lon <- sapply (spl, length)
+> table (lon)
+lon
+   4 
+2813 
+> ##
+> spl[1:3]
+[[1]]
+[1] "ID=MIMAT0027618"        "Alias=MIMAT0027618"     "Name=hsa-miR-6859-5p"   "Derives_from=MI0022705"
+
+[[2]]
+[1] "ID=MIMAT0027619"        "Alias=MIMAT0027619"     "Name=hsa-miR-6859-3p"   "Derives_from=MI0022705"
+
+[[3]]
+[1] "ID=MIMAT0005890"        "Alias=MIMAT0005890"     "Name=hsa-miR-1302"      "Derives_from=MI0006363"
+
+> ##
+> mat[,"ID"]           <- sapply (spl, function (x) sub ("ID=",           "", x[1]))
+> mat[,"Alias"]        <- sapply (spl, function (x) sub ("Alias=",        "", x[2]))
+> mat[,"Name"]         <- sapply (spl, function (x) sub ("Name=",         "", x[3]))
+> mat[,"Derives_from"] <- sapply (spl, function (x) sub ("Derives_from=", "", x[4]))
+> 
+> spl <- strsplit (hpi$attribute, split = ";")
+> lon <- sapply (spl, length)
+> table (lon)
+lon
+   3 
+1881 
+> ##
+> spl[1:3]
+[[1]]
+[1] "ID=MI0022705"        "Alias=MI0022705"     "Name=hsa-mir-6859-1"
+
+[[2]]
+[1] "ID=MI0006363"        "Alias=MI0006363"     "Name=hsa-mir-1302-2"
+
+[[3]]
+[1] "ID=MI0026420"        "Alias=MI0026420"     "Name=hsa-mir-6859-2"
+
+> ##
+> hpi[,"ID"]           <- sapply (spl, function (x) sub ("ID=",           "", x[1]))
+> hpi[,"Alias"]        <- sapply (spl, function (x) sub ("Alias=",        "", x[2]))
+> hpi[,"Name"]         <- sapply (spl, function (x) sub ("Name=",         "", x[3]))
+> 
+> 
+> 
+> ## REVISE DUPLICATES
+> 
+> mat[1:3,]
+   chr   sta   end strand                                                                      attribute           ID        Alias            Name Derives_from
+2 chr1 17409 17431      - ID=MIMAT0027618;Alias=MIMAT0027618;Name=hsa-miR-6859-5p;Derives_from=MI0022705 MIMAT0027618 MIMAT0027618 hsa-miR-6859-5p    MI0022705
+3 chr1 17369 17391      - ID=MIMAT0027619;Alias=MIMAT0027619;Name=hsa-miR-6859-3p;Derives_from=MI0022705 MIMAT0027619 MIMAT0027619 hsa-miR-6859-3p    MI0022705
+5 chr1 30438 30458      +    ID=MIMAT0005890;Alias=MIMAT0005890;Name=hsa-miR-1302;Derives_from=MI0006363 MIMAT0005890 MIMAT0005890    hsa-miR-1302    MI0006363
+> hpi[1:3,]
+   chr    sta    end strand                                        attribute        ID     Alias           Name
+1 chr1  17369  17436      - ID=MI0022705;Alias=MI0022705;Name=hsa-mir-6859-1 MI0022705 MI0022705 hsa-mir-6859-1
+4 chr1  30366  30503      + ID=MI0006363;Alias=MI0006363;Name=hsa-mir-1302-2 MI0006363 MI0006363 hsa-mir-1302-2
+6 chr1 187891 187958      - ID=MI0026420;Alias=MI0026420;Name=hsa-mir-6859-2 MI0026420 MI0026420 hsa-mir-6859-2
+> 
+> table (duplicated (mat[,"ID"]))    ## OK UNIQUE IDS
+
+FALSE 
+ 2813 
+> table (duplicated (mat[,"Alias"]))
+
+FALSE  TRUE 
+ 2588   225 
+> table (duplicated (mat[,"Name"]))
+
+FALSE  TRUE 
+ 2588   225 
+> 
+> table (duplicated (hpi[,"ID"]))    ## OK UNIQUE IDS
+
+FALSE 
+ 1881 
+> table (duplicated (hpi[,"Name"]))  ## OK UNIQUE IDS
+
+FALSE 
+ 1881 
+> 
+> rownames (hpi) <- hpi[,"ID"]
+> hpi[1:3,]
+           chr    sta    end strand                                        attribute        ID     Alias           Name
+MI0022705 chr1  17369  17436      - ID=MI0022705;Alias=MI0022705;Name=hsa-mir-6859-1 MI0022705 MI0022705 hsa-mir-6859-1
+MI0006363 chr1  30366  30503      + ID=MI0006363;Alias=MI0006363;Name=hsa-mir-1302-2 MI0006363 MI0006363 hsa-mir-1302-2
+MI0026420 chr1 187891 187958      - ID=MI0026420;Alias=MI0026420;Name=hsa-mir-6859-2 MI0026420 MI0026420 hsa-mir-6859-2
+> 
+> 
+> ## REORDER
+> orden <- order (mat[,"Derives_from"], mat[,"ID"])
+> mat <- mat[orden,]
+> 
+> orden <- order (hpi[,"ID"])
+> hpi <- hpi[orden,]
+> 
+> mat[1:3,]
+       chr       sta       end strand                                                                      attribute             ID        Alias          Name
+4251  chr9  94175962  94175983      + ID=MIMAT0000062_2;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000060 MIMAT0000062_2 MIMAT0000062 hsa-let-7a-5p
+4252  chr9  94176013  94176033      + ID=MIMAT0004481_1;Alias=MIMAT0004481;Name=hsa-let-7a-3p;Derives_from=MI0000060 MIMAT0004481_1 MIMAT0004481 hsa-let-7a-3p
+798  chr11 122146568 122146589      -   ID=MIMAT0000062;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000061   MIMAT0000062 MIMAT0000062 hsa-let-7a-5p
+     Derives_from
+4251    MI0000060
+4252    MI0000060
+798     MI0000061
+> hpi[1:3,]
+            chr       sta       end strand                                      attribute        ID     Alias         Name
+MI0000060  chr9  94175957  94176036      + ID=MI0000060;Alias=MI0000060;Name=hsa-let-7a-1 MI0000060 MI0000060 hsa-let-7a-1
+MI0000061 chr11 122146522 122146593      - ID=MI0000061;Alias=MI0000061;Name=hsa-let-7a-2 MI0000061 MI0000061 hsa-let-7a-2
+MI0000062 chr22  46112749  46112822      + ID=MI0000062;Alias=MI0000062;Name=hsa-let-7a-3 MI0000062 MI0000062 hsa-let-7a-3
+> 
+> ################################################################################
+> 
+> ### Mature from hairpin
+> table (duplicated (mat[,"Name"]))
+
+FALSE  TRUE 
+ 2588   225 
+> table (duplicated (mat[,"Derives_from"]))
+
+FALSE  TRUE 
+ 1881   932 
+> table (duplicated (mat[,c("Name", "Derives_from")]))  ## OK unique
+
+FALSE 
+ 2813 
+> 
+> table (table (mat[,"Derives_from"]))  ## OK a hairpin produces at most 2 matures
+
+  1   2 
+949 932 
+> 
+> na <- names (sort (table (mat[,"Derives_from"])))[1:10] ## some of the hpi with a single mat
+> na
+ [1] "MI0000109" "MI0000114" "MI0000238" "MI0000240" "MI0000262" "MI0000265" "MI0000293" "MI0000437" "MI0000453" "MI0000454"
+> hpi[na,]
+            chr       sta       end strand                                        attribute        ID     Alias           Name
+MI0000109  chr5 168560896 168560973      - ID=MI0000109;Alias=MI0000109;Name=hsa-mir-103a-1 MI0000109 MI0000109 hsa-mir-103a-1
+MI0000114 chr10  89592747  89592827      -    ID=MI0000114;Alias=MI0000114;Name=hsa-mir-107 MI0000114 MI0000114    hsa-mir-107
+MI0000238 chr17  48632490  48632559      - ID=MI0000238;Alias=MI0000238;Name=hsa-mir-196a-1 MI0000238 MI0000238 hsa-mir-196a-1
+MI0000240  chr3 120395668 120395729      -    ID=MI0000240;Alias=MI0000240;Name=hsa-mir-198 MI0000240 MI0000240    hsa-mir-198
+MI0000262  chr9 120244979 120245050      -   ID=MI0000262;Alias=MI0000262;Name=hsa-mir-147a MI0000262 MI0000262   hsa-mir-147a
+MI0000265 chr19   4770670   4770779      +    ID=MI0000265;Alias=MI0000265;Name=hsa-mir-7-3 MI0000265 MI0000265    hsa-mir-7-3
+MI0000293  chr2  55982967  55983076      -    ID=MI0000293;Alias=MI0000293;Name=hsa-mir-217 MI0000293 MI0000293    hsa-mir-217
+MI0000437 chr18  21829004  21829088      -    ID=MI0000437;Alias=MI0000437;Name=hsa-mir-1-2 MI0000437 MI0000437    hsa-mir-1-2
+MI0000453 chr12  97563812  97563911      + ID=MI0000453;Alias=MI0000453;Name=hsa-mir-135a-2 MI0000453 MI0000453 hsa-mir-135a-2
+MI0000454  chr1  98046070  98046171      -    ID=MI0000454;Alias=MI0000454;Name=hsa-mir-137 MI0000454 MI0000454    hsa-mir-137
+> 
+> 
+> touse <- mat[,"Name"] %in% mat[duplicated (mat[,"Name"]), "Name"]
+> table (touse)
+touse
+FALSE  TRUE 
+ 2421   392 
+> 
+> dup.mat <- mat[touse,]
+> orden <- order (dup.mat$Name, dup.mat$Derives_from)
+> dup.mat <- dup.mat[orden,]
+> dup.mat[1:10,]
+       chr       sta       end strand                                                                       attribute             ID        Alias            Name
+4252  chr9  94176013  94176033      +  ID=MIMAT0004481_1;Alias=MIMAT0004481;Name=hsa-let-7a-3p;Derives_from=MI0000060 MIMAT0004481_1 MIMAT0004481   hsa-let-7a-3p
+3027 chr22  46112800  46112820      +    ID=MIMAT0004481;Alias=MIMAT0004481;Name=hsa-let-7a-3p;Derives_from=MI0000062   MIMAT0004481 MIMAT0004481   hsa-let-7a-3p
+4251  chr9  94175962  94175983      +  ID=MIMAT0000062_2;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000060 MIMAT0000062_2 MIMAT0000062   hsa-let-7a-5p
+798  chr11 122146568 122146589      -    ID=MIMAT0000062;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000061   MIMAT0000062 MIMAT0000062   hsa-let-7a-5p
+3026 chr22  46112752  46112773      +  ID=MIMAT0000062_1;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000062 MIMAT0000062_1 MIMAT0000062   hsa-let-7a-5p
+4254  chr9  94176353  94176374      +    ID=MIMAT0000067;Alias=MIMAT0000067;Name=hsa-let-7f-5p;Derives_from=MI0000067   MIMAT0000067 MIMAT0000067   hsa-let-7f-5p
+4467  chrX  53557246  53557267      -  ID=MIMAT0000067_1;Alias=MIMAT0000067;Name=hsa-let-7f-5p;Derives_from=MI0000068 MIMAT0000067_1 MIMAT0000067   hsa-let-7f-5p
+174   chr1  65058442  65058462      -   ID=MIMAT0000099;Alias=MIMAT0000099;Name=hsa-miR-101-3p;Derives_from=MI0000103   MIMAT0000099 MIMAT0000099  hsa-miR-101-3p
+4176  chr9   4850345   4850365      + ID=MIMAT0000099_1;Alias=MIMAT0000099;Name=hsa-miR-101-3p;Derives_from=MI0000739 MIMAT0000099_1 MIMAT0000099  hsa-miR-101-3p
+2745 chr20   3917541   3917563      +  ID=MIMAT0000101;Alias=MIMAT0000101;Name=hsa-miR-103a-3p;Derives_from=MI0000108   MIMAT0000101 MIMAT0000101 hsa-miR-103a-3p
+     Derives_from
+4252    MI0000060
+3027    MI0000062
+4251    MI0000060
+798     MI0000061
+3026    MI0000062
+4254    MI0000067
+4467    MI0000068
+174     MI0000103
+4176    MI0000739
+2745    MI0000108
+> 
+> table (table (dup.mat[,"Name"]))
+
+  2   3   4   5  11 
+133  20  10   3   1 
+> sort (table (dup.mat[,"Name"]))
+
+    hsa-let-7a-3p     hsa-let-7f-5p    hsa-miR-101-3p   hsa-miR-103a-3p      hsa-miR-103b    hsa-miR-105-3p    hsa-miR-105-5p   hsa-miR-1185-5p   hsa-miR-1233-3p 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+  hsa-miR-1233-5p      hsa-miR-1254  hsa-miR-1255b-5p   hsa-miR-125b-5p      hsa-miR-1283    hsa-miR-128-3p   hsa-miR-1285-3p      hsa-miR-1289    hsa-miR-129-5p 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+  hsa-miR-133a-3p   hsa-miR-133a-5p   hsa-miR-135a-5p    hsa-miR-138-5p      hsa-miR-1-3p    hsa-miR-153-3p     hsa-miR-16-5p   hsa-miR-181a-5p   hsa-miR-181b-5p 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+   hsa-miR-194-5p   hsa-miR-196a-5p      hsa-miR-1972   hsa-miR-199a-3p   hsa-miR-199a-5p    hsa-miR-19b-3p    hsa-miR-218-5p   hsa-miR-219a-5p     hsa-miR-24-3p 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+   hsa-miR-26a-5p    hsa-miR-29b-3p    hsa-miR-30c-5p      hsa-miR-3116      hsa-miR-3119   hsa-miR-3130-3p   hsa-miR-3130-5p   hsa-miR-3156-3p   hsa-miR-3158-3p 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+  hsa-miR-3158-5p   hsa-miR-3160-3p   hsa-miR-3160-5p      hsa-miR-3180      hsa-miR-3198      hsa-miR-3199      hsa-miR-3202      hsa-miR-320b      hsa-miR-320c 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+     hsa-miR-320d    hsa-miR-329-3p    hsa-miR-329-5p      hsa-miR-3648   hsa-miR-3680-3p   hsa-miR-3680-5p      hsa-miR-3687   hsa-miR-3688-3p   hsa-miR-3688-5p 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+    hsa-miR-3689d      hsa-miR-3690   hsa-miR-376a-3p      hsa-miR-378d      hsa-miR-3910   hsa-miR-3913-3p   hsa-miR-3913-5p      hsa-miR-3914      hsa-miR-3926 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+     hsa-miR-4283      hsa-miR-4315      hsa-miR-4435  hsa-miR-4436b-3p  hsa-miR-4436b-5p      hsa-miR-4444      hsa-miR-4472   hsa-miR-450a-5p   hsa-miR-4520-5p 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+  hsa-miR-4536-3p   hsa-miR-4536-5p   hsa-miR-4650-3p   hsa-miR-4650-5p      hsa-miR-4679      hsa-miR-4771      hsa-miR-4773   hsa-miR-4776-3p   hsa-miR-4776-5p 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+   hsa-miR-486-3p    hsa-miR-486-5p    hsa-miR-509-5p    hsa-miR-512-3p    hsa-miR-512-5p   hsa-miR-513a-3p   hsa-miR-513a-5p    hsa-miR-515-3p    hsa-miR-515-5p 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+  hsa-miR-516a-3p   hsa-miR-516a-5p   hsa-miR-516b-3p   hsa-miR-516b-5p   hsa-miR-518a-3p   hsa-miR-518a-5p   hsa-miR-519a-3p       hsa-miR-521      hsa-miR-526a 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+    hsa-miR-548aa  hsa-miR-548ae-3p     hsa-miR-548ag  hsa-miR-548aj-3p   hsa-miR-548d-3p   hsa-miR-548d-5p   hsa-miR-548o-3p   hsa-miR-548x-3p   hsa-miR-550a-5p 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+hsa-miR-550b-2-5p   hsa-miR-550b-3p   hsa-miR-5583-3p   hsa-miR-5583-5p     hsa-miR-5692a     hsa-miR-5692c      hsa-miR-6089  hsa-miR-6511b-3p  hsa-miR-6511b-5p 
+                2                 2                 2                 2                 2                 2                 2                 2                 2 
+  hsa-miR-6862-3p   hsa-miR-6862-5p      hsa-miR-7641      hsa-miR-7973      hsa-miR-8069      hsa-miR-8071    hsa-miR-92a-3p     hsa-let-7a-5p      hsa-miR-1184 
+                2                 2                 2                 2                 2                 2                 2                 3                 3 
+   hsa-miR-124-3p    hsa-miR-124-5p   hsa-miR-3156-5p   hsa-miR-3180-3p   hsa-miR-3180-5p      hsa-miR-4509    hsa-miR-509-3p   hsa-miR-514a-3p   hsa-miR-514a-5p 
+                3                 3                 3                 3                 3                 3                 3                 3                 3 
+   hsa-miR-517-5p   hsa-miR-548a-3p   hsa-miR-550a-3p      hsa-miR-5701   hsa-miR-6770-3p   hsa-miR-6770-5p      hsa-miR-7-5p      hsa-miR-9-3p      hsa-miR-9-5p 
+                3                 3                 3                 3                 3                 3                 3                 3                 3 
+     hsa-miR-1244      hsa-miR-3118      hsa-miR-3179      hsa-miR-3670      hsa-miR-548i  hsa-miR-6511a-3p  hsa-miR-6511a-5p   hsa-miR-6724-5p   hsa-miR-6859-3p 
+                4                 4                 4                 4                 4                 4                 4                 4                 4 
+  hsa-miR-6859-5p   hsa-miR-548f-3p   hsa-miR-548h-5p       hsa-miR-941      hsa-miR-1302 
+                4                 5                 5                 5                11 
+> 
+> ################################################################################
+> 
+> ### LENGTHS
+> mat[,"lon"] <- mat[,"end"] - mat[,"sta"] + 1
+> hpi[,"lon"] <- hpi[,"end"] - hpi[,"sta"] + 1
+> 
+> summary (mat[,"lon"])  ## OK ALL POSITIVE
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  16.00   21.00   22.00   21.61   22.00   28.00 
+> summary (hpi[,"lon"])  ## OK ALL POSITIVE
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  41.00   70.00   80.00   81.87   91.00  180.00 
+> 
+> 
+> 
+> 
+> ################################################################################
+> ### Find RELATIVE position
+> ################################################################################
+> 
+> ## Find relative positions of the mature sequences over the hairpins
+> 
+> ## case EXAMPLE
+> 
+> mat[1:10,]
+       chr       sta       end strand                                                                      attribute             ID        Alias            Name
+4251  chr9  94175962  94175983      + ID=MIMAT0000062_2;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000060 MIMAT0000062_2 MIMAT0000062   hsa-let-7a-5p
+4252  chr9  94176013  94176033      + ID=MIMAT0004481_1;Alias=MIMAT0004481;Name=hsa-let-7a-3p;Derives_from=MI0000060 MIMAT0004481_1 MIMAT0004481   hsa-let-7a-3p
+798  chr11 122146568 122146589      -   ID=MIMAT0000062;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000061   MIMAT0000062 MIMAT0000062   hsa-let-7a-5p
+799  chr11 122146523 122146544      - ID=MIMAT0010195;Alias=MIMAT0010195;Name=hsa-let-7a-2-3p;Derives_from=MI0000061   MIMAT0010195 MIMAT0010195 hsa-let-7a-2-3p
+3026 chr22  46112752  46112773      + ID=MIMAT0000062_1;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000062 MIMAT0000062_1 MIMAT0000062   hsa-let-7a-5p
+3027 chr22  46112800  46112820      +   ID=MIMAT0004481;Alias=MIMAT0004481;Name=hsa-let-7a-3p;Derives_from=MI0000062   MIMAT0004481 MIMAT0004481   hsa-let-7a-3p
+3032 chr22  46113691  46113712      +   ID=MIMAT0000063;Alias=MIMAT0000063;Name=hsa-let-7b-5p;Derives_from=MI0000063   MIMAT0000063 MIMAT0000063   hsa-let-7b-5p
+3033 chr22  46113745  46113766      +   ID=MIMAT0004482;Alias=MIMAT0004482;Name=hsa-let-7b-3p;Derives_from=MI0000063   MIMAT0004482 MIMAT0004482   hsa-let-7b-3p
+2883 chr21  16539838  16539859      +   ID=MIMAT0000064;Alias=MIMAT0000064;Name=hsa-let-7c-5p;Derives_from=MI0000064   MIMAT0000064 MIMAT0000064   hsa-let-7c-5p
+2884 chr21  16539883  16539904      +   ID=MIMAT0026472;Alias=MIMAT0026472;Name=hsa-let-7c-3p;Derives_from=MI0000064   MIMAT0026472 MIMAT0026472   hsa-let-7c-3p
+     Derives_from lon
+4251    MI0000060  22
+4252    MI0000060  21
+798     MI0000061  22
+799     MI0000061  22
+3026    MI0000062  22
+3027    MI0000062  21
+3032    MI0000063  22
+3033    MI0000063  22
+2883    MI0000064  22
+2884    MI0000064  22
+> 
+> h.p <- "MI0000060"  ## example of hairpin from POSITIVE strand
+> h.n <- "MI0000061"  ## example of hairpin from POSITIVE strand
+> 
+> hpi[h.p,]
+           chr      sta      end strand                                      attribute        ID     Alias         Name lon
+MI0000060 chr9 94175957 94176036      + ID=MI0000060;Alias=MI0000060;Name=hsa-let-7a-1 MI0000060 MI0000060 hsa-let-7a-1  80
+> mat[mat$Derives_from == h.p,]
+      chr      sta      end strand                                                                      attribute             ID        Alias          Name Derives_from
+4251 chr9 94175962 94175983      + ID=MIMAT0000062_2;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000060 MIMAT0000062_2 MIMAT0000062 hsa-let-7a-5p    MI0000060
+4252 chr9 94176013 94176033      + ID=MIMAT0004481_1;Alias=MIMAT0004481;Name=hsa-let-7a-3p;Derives_from=MI0000060 MIMAT0004481_1 MIMAT0004481 hsa-let-7a-3p    MI0000060
+     lon
+4251  22
+4252  21
+> mat[mat$Derives_from == h.p, c ("sta", "end")] - hpi[h.p, "sta"] + 1
+     sta end
+4251   6  27
+4252  57  77
+> 
+> hpi[h.n,]
+            chr       sta       end strand                                      attribute        ID     Alias         Name lon
+MI0000061 chr11 122146522 122146593      - ID=MI0000061;Alias=MI0000061;Name=hsa-let-7a-2 MI0000061 MI0000061 hsa-let-7a-2  72
+> mat[mat$Derives_from == h.n,]
+      chr       sta       end strand                                                                      attribute           ID        Alias            Name
+798 chr11 122146568 122146589      -   ID=MIMAT0000062;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000061 MIMAT0000062 MIMAT0000062   hsa-let-7a-5p
+799 chr11 122146523 122146544      - ID=MIMAT0010195;Alias=MIMAT0010195;Name=hsa-let-7a-2-3p;Derives_from=MI0000061 MIMAT0010195 MIMAT0010195 hsa-let-7a-2-3p
+    Derives_from lon
+798    MI0000061  22
+799    MI0000061  22
+> hpi[h.n, "end"] - mat[mat$Derives_from == h.n, c ("end", "sta")] + 1
+    end sta
+798   5  26
+799  50  71
+> 
+> 
+> ### Compute all relative positions
+> mat[1:3,]
+       chr       sta       end strand                                                                      attribute             ID        Alias          Name
+4251  chr9  94175962  94175983      + ID=MIMAT0000062_2;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000060 MIMAT0000062_2 MIMAT0000062 hsa-let-7a-5p
+4252  chr9  94176013  94176033      + ID=MIMAT0004481_1;Alias=MIMAT0004481;Name=hsa-let-7a-3p;Derives_from=MI0000060 MIMAT0004481_1 MIMAT0004481 hsa-let-7a-3p
+798  chr11 122146568 122146589      -   ID=MIMAT0000062;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000061   MIMAT0000062 MIMAT0000062 hsa-let-7a-5p
+     Derives_from lon
+4251    MI0000060  22
+4252    MI0000060  21
+798     MI0000061  22
+> table (mat$Derives_from %in% hpi$ID)  ## OK all in
+
+TRUE 
+2813 
+> 
+> mat[mat$strand == "+", "ref"] <- hpi[mat$Derives_from, "sta"][mat$strand == "+"]
+> mat[mat$strand == "-", "ref"] <- hpi[mat$Derives_from, "end"][mat$strand == "-"]
+> 
+> mat[,c ("Rsta", "Rend")] <- NA
+> mat[mat$strand == "+", c ("Rsta", "Rend")] <-   mat[mat$strand == "+", c ("sta", "end")] - mat[mat$strand == "+", "ref"] + 1
+> mat[mat$strand == "-", c ("Rsta", "Rend")] <- - mat[mat$strand == "-", c ("end", "sta")] + mat[mat$strand == "-", "ref"] + 1
+> 
+> mat[1:10, c ("strand", "ID", "Name", "Rsta", "Rend", "Derives_from")]
+     strand             ID            Name Rsta Rend Derives_from
+4251      + MIMAT0000062_2   hsa-let-7a-5p    6   27    MI0000060
+4252      + MIMAT0004481_1   hsa-let-7a-3p   57   77    MI0000060
+798       -   MIMAT0000062   hsa-let-7a-5p    5   26    MI0000061
+799       -   MIMAT0010195 hsa-let-7a-2-3p   50   71    MI0000061
+3026      + MIMAT0000062_1   hsa-let-7a-5p    4   25    MI0000062
+3027      +   MIMAT0004481   hsa-let-7a-3p   52   72    MI0000062
+3032      +   MIMAT0000063   hsa-let-7b-5p    6   27    MI0000063
+3033      +   MIMAT0004482   hsa-let-7b-3p   60   81    MI0000063
+2883      +   MIMAT0000064   hsa-let-7c-5p   11   32    MI0000064
+2884      +   MIMAT0026472   hsa-let-7c-3p   56   77    MI0000064
+> 
+> tail (mat[,c ("strand", "ID", "Name", "Rsta", "Rend", "Derives_from")])
+     strand             ID            Name Rsta Rend Derives_from
+2868      + MIMAT0025856_3 hsa-miR-6724-5p   11   33    MI0031518
+2878      + MIMAT0030996_1    hsa-miR-8069   54   76    MI0031519
+2846      + MIMAT0004984_4     hsa-miR-941   47   69    MI0031520
+1519      - MIMAT0027618_3 hsa-miR-6859-5p    6   28    MI0031521
+1520      - MIMAT0027619_3 hsa-miR-6859-3p   46   68    MI0031521
+1367      + MIMAT0022494_2    hsa-miR-5701   10   28    MI0031522
+> 
+> hpi[mat[1:10, "Derives_from"],]
+              chr       sta       end strand                                      attribute        ID     Alias         Name lon
+MI0000060    chr9  94175957  94176036      + ID=MI0000060;Alias=MI0000060;Name=hsa-let-7a-1 MI0000060 MI0000060 hsa-let-7a-1  80
+MI0000060.1  chr9  94175957  94176036      + ID=MI0000060;Alias=MI0000060;Name=hsa-let-7a-1 MI0000060 MI0000060 hsa-let-7a-1  80
+MI0000061   chr11 122146522 122146593      - ID=MI0000061;Alias=MI0000061;Name=hsa-let-7a-2 MI0000061 MI0000061 hsa-let-7a-2  72
+MI0000061.1 chr11 122146522 122146593      - ID=MI0000061;Alias=MI0000061;Name=hsa-let-7a-2 MI0000061 MI0000061 hsa-let-7a-2  72
+MI0000062   chr22  46112749  46112822      + ID=MI0000062;Alias=MI0000062;Name=hsa-let-7a-3 MI0000062 MI0000062 hsa-let-7a-3  74
+MI0000062.1 chr22  46112749  46112822      + ID=MI0000062;Alias=MI0000062;Name=hsa-let-7a-3 MI0000062 MI0000062 hsa-let-7a-3  74
+MI0000063   chr22  46113686  46113768      +   ID=MI0000063;Alias=MI0000063;Name=hsa-let-7b MI0000063 MI0000063   hsa-let-7b  83
+MI0000063.1 chr22  46113686  46113768      +   ID=MI0000063;Alias=MI0000063;Name=hsa-let-7b MI0000063 MI0000063   hsa-let-7b  83
+MI0000064   chr21  16539828  16539911      +   ID=MI0000064;Alias=MI0000064;Name=hsa-let-7c MI0000064 MI0000064   hsa-let-7c  84
+MI0000064.1 chr21  16539828  16539911      +   ID=MI0000064;Alias=MI0000064;Name=hsa-let-7c MI0000064 MI0000064   hsa-let-7c  84
+> 
+> 
+> 
+> ################################################################################
+> ### Find the tail
+> ################################################################################
+> 
+> ### Fin the tail (or side: 5'; 3') of the hairpin
+> ##  in which the mature miRNA is allocated
+> 
+> mat[,"hpi.center"] <- hpi[mat$Derives_from, "lon"] / 2
+> mat[1:3,]
+       chr       sta       end strand                                                                      attribute             ID        Alias          Name
+4251  chr9  94175962  94175983      + ID=MIMAT0000062_2;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000060 MIMAT0000062_2 MIMAT0000062 hsa-let-7a-5p
+4252  chr9  94176013  94176033      + ID=MIMAT0004481_1;Alias=MIMAT0004481;Name=hsa-let-7a-3p;Derives_from=MI0000060 MIMAT0004481_1 MIMAT0004481 hsa-let-7a-3p
+798  chr11 122146568 122146589      -   ID=MIMAT0000062;Alias=MIMAT0000062;Name=hsa-let-7a-5p;Derives_from=MI0000061   MIMAT0000062 MIMAT0000062 hsa-let-7a-5p
+     Derives_from lon       ref Rsta Rend hpi.center
+4251    MI0000060  22  94175957    6   27         40
+4252    MI0000060  21  94175957   57   77         40
+798     MI0000061  22 122146593    5   26         36
+> 
+> mat[,"p"] <- NA
+> ##
+> touse <- (mat[,"Rsta"] < mat[,"hpi.center"]) & (mat[,"Rend"] <= mat[,"hpi.center"])
+> table (touse)
+touse
+FALSE  TRUE 
+ 1424  1389 
+> mat[touse, "p"] <- 5
+> ##
+> touse <- (mat[,"hpi.center"] <= mat[,"Rsta"]) & (mat[,"hpi.center"] < mat[,"Rend"])
+> table (touse)
+touse
+FALSE  TRUE 
+ 1410  1403 
+> mat[touse, "p"] <- 3
+> ##
+> table (mat[,"p"], exclude = NULL)   ## almost all of them get a classification
+
+   3    5 <NA> 
+1403 1389   21 
+> ##
+> mat[is.na (mat$p),]
+       chr       sta       end strand                                                                        attribute             ID        Alias             Name
+4307  chr9 124692480 124692502      + ID=MIMAT0000256_1;Alias=MIMAT0000256;Name=hsa-miR-181a-5p;Derives_from=MI0000269 MIMAT0000256_1 MIMAT0000256  hsa-miR-181a-5p
+307   chr1 198858925 198858947      -   ID=MIMAT0000257;Alias=MIMAT0000257;Name=hsa-miR-181b-5p;Derives_from=MI0000270   MIMAT0000257 MIMAT0000257  hsa-miR-181b-5p
+2043 chr18  35904871  35904892      -    ID=MIMAT0004561;Alias=MIMAT0004561;Name=hsa-miR-187-5p;Derives_from=MI0000274   MIMAT0004561 MIMAT0004561   hsa-miR-187-5p
+2508  chr2  55983020  55983042      -       ID=MIMAT0000274;Alias=MIMAT0000274;Name=hsa-miR-217;Derives_from=MI0000293   MIMAT0000274 MIMAT0000274      hsa-miR-217
+4581  chrX 134546644 134546664      -    ID=MIMAT0004749;Alias=MIMAT0004749;Name=hsa-miR-424-3p;Derives_from=MI0001446   MIMAT0004749 MIMAT0004749   hsa-miR-424-3p
+1793 chr17  28861403  28861424      -      ID=MIMAT0001631;Alias=MIMAT0001631;Name=hsa-miR-451a;Derives_from=MI0001729   MIMAT0001631 MIMAT0001631     hsa-miR-451a
+201   chr1 100281256 100281276      +       ID=MIMAT0003216;Alias=MIMAT0003216;Name=hsa-miR-553;Derives_from=MI0003558   MIMAT0003216 MIMAT0003216      hsa-miR-553
+212   chr1 116671787 116671808      +      ID=MIMAT0005792;Alias=MIMAT0005792;Name=hsa-miR-320b;Derives_from=MI0003776   MIMAT0005792 MIMAT0005792     hsa-miR-320b
+973  chr12 119713678 119713695      -   ID=MIMAT0022940;Alias=MIMAT0022940;Name=hsa-miR-1178-5p;Derives_from=MI0006271   MIMAT0022940 MIMAT0022940  hsa-miR-1178-5p
+678  chr11  64368651  64368671      +   ID=MIMAT0022946;Alias=MIMAT0022946;Name=hsa-miR-1237-5p;Derives_from=MI0006327   MIMAT0022946 MIMAT0022946  hsa-miR-1237-5p
+2836 chr20  63286818  63286837      +      ID=MIMAT0016888;Alias=MIMAT0016888;Name=hsa-miR-4326;Derives_from=MI0015866   MIMAT0016888 MIMAT0016888     hsa-miR-4326
+2645  chr2 188995645 188995665      +   ID=MIMAT0017983;Alias=MIMAT0017983;Name=hsa-miR-3606-5p;Derives_from=MI0015996   MIMAT0017983 MIMAT0017983  hsa-miR-3606-5p
+362   chr1 228097285 228097306      +   ID=MIMAT0022967;Alias=MIMAT0022967;Name=hsa-miR-3620-5p;Derives_from=MI0016011   MIMAT0022967 MIMAT0022967  hsa-miR-3620-5p
+194   chr1  94745880  94745899      -      ID=MIMAT0018937;Alias=MIMAT0018937;Name=hsa-miR-378g;Derives_from=MI0016761   MIMAT0018937 MIMAT0018937     hsa-miR-378g
+3419  chr5    535861    535877      -      ID=MIMAT0018978;Alias=MIMAT0018978;Name=hsa-miR-4456;Derives_from=MI0016802   MIMAT0018978 MIMAT0018978     hsa-miR-4456
+3579  chr5 174751743 174751761      +      ID=MIMAT0019691;Alias=MIMAT0019691;Name=hsa-miR-4634;Derives_from=MI0017261   MIMAT0019691 MIMAT0019691     hsa-miR-4634
+1558 chr16   3485422   3485439      -      ID=MIMAT0024599;Alias=MIMAT0024599;Name=hsa-miR-6126;Derives_from=MI0021260   MIMAT0024599 MIMAT0024599     hsa-miR-6126
+3598  chr6   1390359   1390381      -   ID=MIMAT0027345;Alias=MIMAT0027345;Name=hsa-miR-6720-5p;Derives_from=MI0022555   MIMAT0027345 MIMAT0027345  hsa-miR-6720-5p
+1997 chr17  81693809  81693829      +   ID=MIMAT0027472;Alias=MIMAT0027472;Name=hsa-miR-6786-5p;Derives_from=MI0022631   MIMAT0027472 MIMAT0027472  hsa-miR-6786-5p
+4458  chrX  53198917  53198940      -   ID=MIMAT0027688;Alias=MIMAT0027688;Name=hsa-miR-6894-5p;Derives_from=MI0022741   MIMAT0027688 MIMAT0027688  hsa-miR-6894-5p
+3140  chr3  60617837  60617858      -  ID=MIMAT0035703;Alias=MIMAT0035703;Name=hsa-miR-548bb-5p;Derives_from=MI0029321   MIMAT0035703 MIMAT0035703 hsa-miR-548bb-5p
+     Derives_from lon       ref Rsta Rend hpi.center  p
+4307    MI0000269  23 124692442   39   61       55.0 NA
+307     MI0000270  23 198858982   36   58       55.0 NA
+2043    MI0000274  22  35904926   35   56       54.5 NA
+2508    MI0000293  23  55983076   35   57       55.0 NA
+4581    MI0001446  21 134546711   48   68       49.0 NA
+1793    MI0001729  22  28861440   17   38       36.0 NA
+201     MI0003558  21 100281241   16   36       34.0 NA
+212     MI0003776  22 116671749   39   60       39.5 NA
+973     MI0006271  18 119713724   30   47       45.5 NA
+678     MI0006327  21  64368602   50   70       51.0 NA
+2836    MI0015866  20  63286808   11   30       29.5 NA
+2645    MI0015996  21 188995630   16   36       31.5 NA
+362     MI0016011  22 228097263   23   44       39.5 NA
+194     MI0016761  20  94745900    2   21       20.5 NA
+3419    MI0016802  17    535882    6   22       21.5 NA
+3579    MI0017261  19 174751734   10   28       27.0 NA
+1558    MI0021260  18   3485469   31   48       44.5 NA
+3598    MI0022555  23   1390411   31   53       49.0 NA
+1997    MI0022631  21  81693757   53   73       56.5 NA
+4458    MI0022741  24  53198945    6   29       28.5 NA
+3140    MI0029321  22  60617870   13   34       33.0 NA
+> 
+> 
+> ## Use the middle position of the mature miRNA for the tail allocation
+> mat[,"mat.center"] <- (mat[,"Rend"] + mat[,"Rsta"]) / 2
+> ##
+> table (mat$mat.center == mat$hpi.center) ## OK not equal centers
+
+FALSE 
+ 2813 
+> ##
+> mat[,"tail"] <- NA
+> mat[mat$mat.center < mat$hpi.center, "tail"] <- 5
+> mat[mat$mat.center > mat$hpi.center, "tail"] <- 3
+> ##
+> table (mat[,"tail"], exclude = NULL)
+
+   3    5 <NA> 
+1407 1406    0 
+> 
+> table (tail = mat[,"tail"], p = mat[,"p"], exclude = NULL)
+      p
+tail      3    5 <NA>
+  3    1403    0    4
+  5       0 1389   17
+  <NA>    0    0    0
+> mat[is.na (mat$p),]
+       chr       sta       end strand                                                                        attribute             ID        Alias             Name
+4307  chr9 124692480 124692502      + ID=MIMAT0000256_1;Alias=MIMAT0000256;Name=hsa-miR-181a-5p;Derives_from=MI0000269 MIMAT0000256_1 MIMAT0000256  hsa-miR-181a-5p
+307   chr1 198858925 198858947      -   ID=MIMAT0000257;Alias=MIMAT0000257;Name=hsa-miR-181b-5p;Derives_from=MI0000270   MIMAT0000257 MIMAT0000257  hsa-miR-181b-5p
+2043 chr18  35904871  35904892      -    ID=MIMAT0004561;Alias=MIMAT0004561;Name=hsa-miR-187-5p;Derives_from=MI0000274   MIMAT0004561 MIMAT0004561   hsa-miR-187-5p
+2508  chr2  55983020  55983042      -       ID=MIMAT0000274;Alias=MIMAT0000274;Name=hsa-miR-217;Derives_from=MI0000293   MIMAT0000274 MIMAT0000274      hsa-miR-217
+4581  chrX 134546644 134546664      -    ID=MIMAT0004749;Alias=MIMAT0004749;Name=hsa-miR-424-3p;Derives_from=MI0001446   MIMAT0004749 MIMAT0004749   hsa-miR-424-3p
+1793 chr17  28861403  28861424      -      ID=MIMAT0001631;Alias=MIMAT0001631;Name=hsa-miR-451a;Derives_from=MI0001729   MIMAT0001631 MIMAT0001631     hsa-miR-451a
+201   chr1 100281256 100281276      +       ID=MIMAT0003216;Alias=MIMAT0003216;Name=hsa-miR-553;Derives_from=MI0003558   MIMAT0003216 MIMAT0003216      hsa-miR-553
+212   chr1 116671787 116671808      +      ID=MIMAT0005792;Alias=MIMAT0005792;Name=hsa-miR-320b;Derives_from=MI0003776   MIMAT0005792 MIMAT0005792     hsa-miR-320b
+973  chr12 119713678 119713695      -   ID=MIMAT0022940;Alias=MIMAT0022940;Name=hsa-miR-1178-5p;Derives_from=MI0006271   MIMAT0022940 MIMAT0022940  hsa-miR-1178-5p
+678  chr11  64368651  64368671      +   ID=MIMAT0022946;Alias=MIMAT0022946;Name=hsa-miR-1237-5p;Derives_from=MI0006327   MIMAT0022946 MIMAT0022946  hsa-miR-1237-5p
+2836 chr20  63286818  63286837      +      ID=MIMAT0016888;Alias=MIMAT0016888;Name=hsa-miR-4326;Derives_from=MI0015866   MIMAT0016888 MIMAT0016888     hsa-miR-4326
+2645  chr2 188995645 188995665      +   ID=MIMAT0017983;Alias=MIMAT0017983;Name=hsa-miR-3606-5p;Derives_from=MI0015996   MIMAT0017983 MIMAT0017983  hsa-miR-3606-5p
+362   chr1 228097285 228097306      +   ID=MIMAT0022967;Alias=MIMAT0022967;Name=hsa-miR-3620-5p;Derives_from=MI0016011   MIMAT0022967 MIMAT0022967  hsa-miR-3620-5p
+194   chr1  94745880  94745899      -      ID=MIMAT0018937;Alias=MIMAT0018937;Name=hsa-miR-378g;Derives_from=MI0016761   MIMAT0018937 MIMAT0018937     hsa-miR-378g
+3419  chr5    535861    535877      -      ID=MIMAT0018978;Alias=MIMAT0018978;Name=hsa-miR-4456;Derives_from=MI0016802   MIMAT0018978 MIMAT0018978     hsa-miR-4456
+3579  chr5 174751743 174751761      +      ID=MIMAT0019691;Alias=MIMAT0019691;Name=hsa-miR-4634;Derives_from=MI0017261   MIMAT0019691 MIMAT0019691     hsa-miR-4634
+1558 chr16   3485422   3485439      -      ID=MIMAT0024599;Alias=MIMAT0024599;Name=hsa-miR-6126;Derives_from=MI0021260   MIMAT0024599 MIMAT0024599     hsa-miR-6126
+3598  chr6   1390359   1390381      -   ID=MIMAT0027345;Alias=MIMAT0027345;Name=hsa-miR-6720-5p;Derives_from=MI0022555   MIMAT0027345 MIMAT0027345  hsa-miR-6720-5p
+1997 chr17  81693809  81693829      +   ID=MIMAT0027472;Alias=MIMAT0027472;Name=hsa-miR-6786-5p;Derives_from=MI0022631   MIMAT0027472 MIMAT0027472  hsa-miR-6786-5p
+4458  chrX  53198917  53198940      -   ID=MIMAT0027688;Alias=MIMAT0027688;Name=hsa-miR-6894-5p;Derives_from=MI0022741   MIMAT0027688 MIMAT0027688  hsa-miR-6894-5p
+3140  chr3  60617837  60617858      -  ID=MIMAT0035703;Alias=MIMAT0035703;Name=hsa-miR-548bb-5p;Derives_from=MI0029321   MIMAT0035703 MIMAT0035703 hsa-miR-548bb-5p
+     Derives_from lon       ref Rsta Rend hpi.center  p mat.center tail
+4307    MI0000269  23 124692442   39   61       55.0 NA       50.0    5
+307     MI0000270  23 198858982   36   58       55.0 NA       47.0    5
+2043    MI0000274  22  35904926   35   56       54.5 NA       45.5    5
+2508    MI0000293  23  55983076   35   57       55.0 NA       46.0    5
+4581    MI0001446  21 134546711   48   68       49.0 NA       58.0    3
+1793    MI0001729  22  28861440   17   38       36.0 NA       27.5    5
+201     MI0003558  21 100281241   16   36       34.0 NA       26.0    5
+212     MI0003776  22 116671749   39   60       39.5 NA       49.5    3
+973     MI0006271  18 119713724   30   47       45.5 NA       38.5    5
+678     MI0006327  21  64368602   50   70       51.0 NA       60.0    3
+2836    MI0015866  20  63286808   11   30       29.5 NA       20.5    5
+2645    MI0015996  21 188995630   16   36       31.5 NA       26.0    5
+362     MI0016011  22 228097263   23   44       39.5 NA       33.5    5
+194     MI0016761  20  94745900    2   21       20.5 NA       11.5    5
+3419    MI0016802  17    535882    6   22       21.5 NA       14.0    5
+3579    MI0017261  19 174751734   10   28       27.0 NA       19.0    5
+1558    MI0021260  18   3485469   31   48       44.5 NA       39.5    5
+3598    MI0022555  23   1390411   31   53       49.0 NA       42.0    5
+1997    MI0022631  21  81693757   53   73       56.5 NA       63.0    3
+4458    MI0022741  24  53198945    6   29       28.5 NA       17.5    5
+3140    MI0029321  22  60617870   13   34       33.0 NA       23.5    5
+> 
+> 
+> ## review by name
+> table (mat$tail, exclude = NULL)
+
+   3    5 <NA> 
+1407 1406    0 
+> mat.5p <- mat[mat$tail == 5,]
+> mat.3p <- mat[mat$tail == 3,]
+> dim (mat.5p)
+[1] 1406   17
+> dim (mat.3p)
+[1] 1407   17
+> 
+> grep ("3p", mat.5p[,"Name"], value = TRUE)
+character(0)
+> grep ("5p", mat.3p[,"Name"], value = TRUE)
+[1] "hsa-miR-1237-5p" "hsa-miR-6786-5p"
+> 
+> malos <- mat[,"Name"] %in% grep ("5p", mat.3p[,"Name"], value = TRUE)
+> table (malos)
+malos
+FALSE  TRUE 
+ 2811     2 
+> mat[malos,]    ## WRONG TAIL
+       chr      sta      end strand                                                                      attribute           ID        Alias            Name Derives_from
+678  chr11 64368651 64368671      + ID=MIMAT0022946;Alias=MIMAT0022946;Name=hsa-miR-1237-5p;Derives_from=MI0006327 MIMAT0022946 MIMAT0022946 hsa-miR-1237-5p    MI0006327
+1997 chr17 81693809 81693829      + ID=MIMAT0027472;Alias=MIMAT0027472;Name=hsa-miR-6786-5p;Derives_from=MI0022631 MIMAT0027472 MIMAT0027472 hsa-miR-6786-5p    MI0022631
+     lon      ref Rsta Rend hpi.center  p mat.center tail
+678   21 64368602   50   70       51.0 NA         60    3
+1997  21 81693757   53   73       56.5 NA         63    3
+> 
+> mat[mat$Derives_from == "MI0006327",]
+      chr      sta      end strand                                                                      attribute           ID        Alias            Name Derives_from
+677 chr11 64368683 64368703      + ID=MIMAT0005592;Alias=MIMAT0005592;Name=hsa-miR-1237-3p;Derives_from=MI0006327 MIMAT0005592 MIMAT0005592 hsa-miR-1237-3p    MI0006327
+678 chr11 64368651 64368671      + ID=MIMAT0022946;Alias=MIMAT0022946;Name=hsa-miR-1237-5p;Derives_from=MI0006327 MIMAT0022946 MIMAT0022946 hsa-miR-1237-5p    MI0006327
+    lon      ref Rsta Rend hpi.center  p mat.center tail
+677  21 64368602   82  102         51  3         92    3
+678  21 64368602   50   70         51 NA         60    3
+> mat[mat$Derives_from == "MI0022631",]
+       chr      sta      end strand                                                                      attribute           ID        Alias            Name Derives_from
+1997 chr17 81693809 81693829      + ID=MIMAT0027472;Alias=MIMAT0027472;Name=hsa-miR-6786-5p;Derives_from=MI0022631 MIMAT0027472 MIMAT0027472 hsa-miR-6786-5p    MI0022631
+1998 chr17 81693844 81693866      + ID=MIMAT0027473;Alias=MIMAT0027473;Name=hsa-miR-6786-3p;Derives_from=MI0022631 MIMAT0027473 MIMAT0027473 hsa-miR-6786-3p    MI0022631
+     lon      ref Rsta Rend hpi.center  p mat.center tail
+1997  21 81693757   53   73       56.5 NA         63    3
+1998  23 81693757   88  110       56.5  3         99    3
+> 
+> 
+> ###SAVE
+> setwd (.job$dir$proces)
+> save (mat, hpi, file = "info_from_gff.RData")
+> 
+> 
+> ###EXIT
+> warnings ()
+NULL
+> sessionInfo ()
+R version 3.2.0 (2015-04-16)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 14.04.2 LTS
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=es_ES.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=es_ES.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=es_ES.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=es_ES.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+> q ("no")
+> proc.time()
+   user  system elapsed 
+  0.586   0.020   0.609 

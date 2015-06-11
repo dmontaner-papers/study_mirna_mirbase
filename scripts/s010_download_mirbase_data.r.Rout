@@ -1,0 +1,140 @@
+
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##s010_download_mirbase_data.r
+> ##2015-06-08 dmontaner@cipf.es
+> ##Study of miRBase sequences
+> 
+> date ()
+[1] "Thu Jun 11 13:39:01 2015"
+> Sys.info ()[c("nodename", "user")]
+   nodename        user 
+      "lap" "dmontaner" 
+> commandArgs ()
+[1] "/usr/lib/R/bin/exec/R"                                                                      
+[2] "-f"                                                                                         
+[3] "/home/dmontaner/trabajos_mios/2015/study_mirna_mirbase/scripts/s010_download_mirbase_data.r"
+[4] "--restore"                                                                                  
+[5] "--save"                                                                                     
+[6] "--no-readline"                                                                              
+[7] "--no-save"                                                                                  
+[8] "--no-restore"                                                                               
+> rm (list = ls ())
+> R.version.string ##"R version 3.2.0 (2015-04-16)"
+[1] "R version 3.2.0 (2015-04-16)"
+> #library (); packageDescription ("", fields = "Version") #
+> 
+> try (source (".job.r")); try (.job)
+
+.job.r has been sourced
+
+$name
+[1] "study_mirna_mirbase"
+
+$dir
+$dir$data
+[1] "~/datos/2015/study_mirna_mirbase"
+
+$dir$code
+[1] "~/trabajos/2015/study_mirna_mirbase"
+
+$dir$scripts
+[1] "~/trabajos/2015/study_mirna_mirbase/scripts"
+
+$dir$docs
+[1] "~/trabajos/2015/study_mirna_mirbase/documents"
+
+$dir$rawdat
+[1] "~/datos/2015/study_mirna_mirbase/data_raw"
+
+$dir$annotation
+[1] "~/datos/2015/study_mirna_mirbase/data_annotation"
+
+$dir$proces
+[1] "~/datos/2015/study_mirna_mirbase/data_processed"
+
+$dir$plots
+[1] "~/datos/2015/study_mirna_mirbase/results/plots"
+
+$dir$res
+[1] "~/datos/2015/study_mirna_mirbase/results/files"
+
+
+$testmode
+[1] FALSE
+
+$dec
+[1] "."
+
+$idsep
+[1] " /// "
+
+> 
+> options (width = 170)
+> 
+> 
+> ###DATA
+> setwd (file.path (.job$dir$rawdat))
+> dir ()
+[1] "hairpin.fa.gz" "hsa.gff3"      "mature.fa.gz" 
+> 
+> system.time (download.file (url = "ftp://mirbase.org/pub/mirbase/CURRENT/hairpin.fa.gz",    destfile = "hairpin.fa.gz"))
+trying URL 'ftp://mirbase.org/pub/mirbase/CURRENT/hairpin.fa.gz'
+ftp data connection made, file length 1207144 bytes
+==================================================
+downloaded 1.2 MB
+
+   user  system elapsed 
+  0.016   0.005   1.210 
+> system.time (download.file (url = "ftp://mirbase.org/pub/mirbase/CURRENT/mature.fa.gz",     destfile = "mature.fa.gz"))
+trying URL 'ftp://mirbase.org/pub/mirbase/CURRENT/mature.fa.gz'
+ftp data connection made, file length 590888 bytes
+==================================================
+downloaded 577 KB
+
+   user  system elapsed 
+  0.004   0.010   0.855 
+> system.time (download.file (url = "ftp://mirbase.org/pub/mirbase/CURRENT/genomes/hsa.gff3", destfile = "hsa.gff3"))
+trying URL 'ftp://mirbase.org/pub/mirbase/CURRENT/genomes/hsa.gff3'
+ftp data connection made, file length 522631 bytes
+==================================================
+downloaded 510 KB
+
+   user  system elapsed 
+  0.003   0.008   0.773 
+> 
+> 
+> ###EXIT
+> warnings ()
+NULL
+> sessionInfo ()
+R version 3.2.0 (2015-04-16)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 14.04.2 LTS
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=es_ES.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=es_ES.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=es_ES.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=es_ES.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+> q ("no")
+> proc.time()
+   user  system elapsed 
+  0.244   0.052   3.501 
