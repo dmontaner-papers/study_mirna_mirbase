@@ -44,7 +44,7 @@ Findings
 1. Fasta files in miRBase use the RNA _alphabet_ (U instead of T).
 1. Not many but some miRNA sequences may have __ambiguity codes__ (letters other than A, C, U, G).
 
-1. Each hairpin may produce just 1 or 2 mature molecules, not more.
+1. Each hairpin may produce just 1 or 2 mature molecules, not more (in human there seems to be some with more in other species).
 1. The same mature molecules may produced from different hairpins. 
 
 1. Some hairpins can be __expressed form both strands__ (same chromosomic position & different strand in the GFF file).  
@@ -55,6 +55,20 @@ Findings
 
 1. The __middle base__ in the hairpin separates the _5p_ _3p_ mature miRNAs for most of human cases.
    Just 2 human microRNAs where wrongly classified using the _middle base_.
+
+
+To Do 
+--------------------------------------------------------------------------------
+
+- Explore the number of mature sequences arising from each hairpin. Apparently in some species there may be __more than 2__.
+
+
+Notes
+--------------------------------------------------------------------------------
+
+The __exact version of the genome assembly__ used by miRBase is indicated in the GFF files.
+
+
 
 
 Miscellany
@@ -75,5 +89,4 @@ Ideally FASTX-Toolkit may help you by:
     fasta_nucleotide_changer -i formatted.fa -o hairpinDNA.fa -d
 
 But `fasta_nucleotide_changer` does not work with __ambiguity codes__.
-
 

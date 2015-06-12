@@ -30,7 +30,7 @@ Type 'q()' to quit R.
 > # genome-build-accession:  NCBI_Assembly:GCA_000001405.15
 > 
 > date ()
-[1] "Thu Jun 11 13:39:49 2015"
+[1] "Fri Jun 12 13:42:29 2015"
 > Sys.info ()[c("nodename", "user")]
    nodename        user 
       "lap" "dmontaner" 
@@ -200,7 +200,7 @@ TRUE
 > ### READ GENOMIC DNA
 > system.time (ref  <- readDNAStringSet (filepath = file.path (.job$dir$annot, "GCA_000001405.15_GRCh38_genomic.fna.gz"), format="fasta"))
    user  system elapsed 
- 36.440   0.465  39.816 
+ 36.335   0.352  36.657 
 > ## system.time (ref0 <- readDNAStringSet (filepath = file.path (.job$dir$annot, "GCA_000001405.15_GRCh38_genomic.fna"),    format="fasta"))
 > ## identical (ref, ref0)
 > 
@@ -1710,7 +1710,7 @@ KI270921.1 Homo sapiens chromosome 19 genomic contig, GRCh38 reference assembly 
 +     }
 + })
    user  system elapsed 
- 11.096   0.004  11.094 
+ 11.306   0.020  11.320 
 > seqs
   A DNAStringSet instance of length 1881
        width seq                                                                                                                                      names               
@@ -1786,4 +1786,4 @@ loaded via a namespace (and not attached):
 > q ("no")
 > proc.time()
    user  system elapsed 
- 49.713   0.532  53.144 
+ 49.798   0.422  50.175 

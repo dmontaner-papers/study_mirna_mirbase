@@ -1,0 +1,433 @@
+
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##t010_mirbase_formatter.r
+> ##2015-06-12 dmontaner@cipf.es
+> ##Download miRBase hairpin information and format to use it with aligners
+> 
+> ## To Do: make a function with this pipeline
+> 
+> ## igual seria mejor intentar construir un GFF para las secuencias...
+> 
+> date ()
+[1] "Fri Jun 12 13:45:16 2015"
+> Sys.info ()[c("nodename", "user")]
+   nodename        user 
+      "lap" "dmontaner" 
+> commandArgs ()
+[1] "/usr/lib/R/bin/exec/R"                                                                  
+[2] "-f"                                                                                     
+[3] "/home/dmontaner/trabajos_mios/2015/study_mirna_mirbase/scripts/t010_mirbase_formatter.r"
+[4] "--restore"                                                                              
+[5] "--save"                                                                                 
+[6] "--no-readline"                                                                          
+[7] "--no-save"                                                                              
+[8] "--no-restore"                                                                           
+> rm (list = ls ())
+> R.version.string ##"R version 3.2.0 (2015-04-16)"
+[1] "R version 3.2.0 (2015-04-16)"
+> library (Biostrings); packageDescription ("Biostrings", fields = "Version") #"2.36.1"
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from ‘package:stats’:
+
+    xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, as.vector, cbind, colnames,
+    do.call, duplicated, eval, evalq, Filter, Find, get, intersect,
+    is.unsorted, lapply, Map, mapply, match, mget, order, paste, pmax,
+    pmax.int, pmin, pmin.int, Position, rank, rbind, Reduce, rep.int,
+    rownames, sapply, setdiff, sort, table, tapply, union, unique,
+    unlist, unsplit
+
+Loading required package: S4Vectors
+Loading required package: stats4
+Loading required package: IRanges
+Loading required package: XVector
+[1] "2.36.1"
+> #help (package = Biostrings)
+> 
+> try (source (".job.r")); try (.job)
+
+.job.r has been sourced
+
+$name
+[1] "study_mirna_mirbase"
+
+$dir
+$dir$data
+[1] "~/datos/2015/study_mirna_mirbase"
+
+$dir$code
+[1] "~/trabajos/2015/study_mirna_mirbase"
+
+$dir$scripts
+[1] "~/trabajos/2015/study_mirna_mirbase/scripts"
+
+$dir$docs
+[1] "~/trabajos/2015/study_mirna_mirbase/documents"
+
+$dir$rawdat
+[1] "~/datos/2015/study_mirna_mirbase/data_raw"
+
+$dir$annotation
+[1] "~/datos/2015/study_mirna_mirbase/data_annotation"
+
+$dir$proces
+[1] "~/datos/2015/study_mirna_mirbase/data_processed"
+
+$dir$plots
+[1] "~/datos/2015/study_mirna_mirbase/results/plots"
+
+$dir$res
+[1] "~/datos/2015/study_mirna_mirbase/results/files"
+
+
+$testmode
+[1] FALSE
+
+$dec
+[1] "."
+
+$idsep
+[1] " /// "
+
+> 
+> options (width = 170)
+> 
+> 
+> ### GET DATA FROM MIRBASE
+> seq <- readRNAStringSet      ("ftp://mirbase.org/pub/mirbase/CURRENT/hairpin.fa.gz")
+trying URL 'ftp://mirbase.org/pub/mirbase/CURRENT/hairpin.fa.gz'
+ftp data connection made, file length 1207144 bytes
+==================================================
+downloaded 1.2 MB
+
+trying URL 'ftp://mirbase.org/pub/mirbase/CURRENT/hairpin.fa.gz'
+ftp data connection made, file length 1207144 bytes
+==================================================
+downloaded 1.2 MB
+
+> str <- readLines (gzcon (url ("ftp://mirbase.org/pub/mirbase/CURRENT/miRNA.str.gz")))
+> 
+> 
+> ################################################################################
+> 
+> 
+> ### EXTRACT INFORMATION from sequences
+> datos <- data.frame (seq.names = names (seq), stringsAsFactors = FALSE)
+> 
+> nombres <- names (seq)
+> nombres <- sub (" +stem-loop", "", nombres)
+> nombres <- sub (" +stem +loop", "", nombres)
+> ##
+> nombres <- strsplit (nombres, split = " +")
+> ##
+> datos[,"id"]  <- sapply (nombres, "[", 1)
+> datos[,"acc"] <- sapply (nombres, "[", 2)
+> datos[,"lon"] <- width (seq)
+> datos[,"spe"] <- substr (datos[, "id"], 1, 3)
+> 
+> ##sort (table (datos[,"spe"]))
+> 
+> if (any (duplicated (datos[,"id"]))) stop ("duplicated IDs in sequences")
+> 
+> 
+> ################################################################################
+> 
+> 
+> ### EXTRACT INFORMATION FORM LINES
+> str <- grep ("^>", str, value = TRUE)
+> str <- sub ("^>", "", str)
+> 
+> datos1 <- data.frame (str.names = str, stringsAsFactors = FALSE)
+> 
+> str <- strsplit (datos1[,"str.names"], split = " +")
+>  datos1[,"lon"] <- sapply (str, length)
+> datos1[,"id"]  <- sapply (str, "[", 1)
+>  datos1[,"parentesis"] <- sapply (str, "[", 2)
+> datos1[,"p5"] <- sapply (str, "[", 3)
+> datos1[,"p3"] <- sapply (str, "[", 4)
+> 
+> datos1[,"p5"] <- sub ("\\[", "", datos1[,"p5"])
+> datos1[,"p5"] <- sub ("]",   "", datos1[,"p5"])
+> ##
+> datos1[,"p3"] <- sub ("\\[", "", datos1[,"p3"])
+> datos1[,"p3"] <- sub ("]",   "", datos1[,"p3"])
+> 
+> p5 <- strsplit (datos1[,"p5"], split = ":")
+> datos1[,"p5.id"] <- sapply (p5, "[", 1)
+> ##
+> p5 <- strsplit (sapply (p5, "[", 2), split = "-")
+> datos1[,"p5.ini"] <- as.integer (sapply (p5, "[", 1))
+> datos1[,"p5.end"] <- as.integer (sapply (p5, "[", 2))
+> ####
+> p3 <- strsplit (datos1[,"p3"], split = ":")
+> datos1[,"p3.id"] <- sapply (p3, "[", 1)
+> ##
+> p3 <- strsplit (sapply (p3, "[", 2), split = "-")
+> datos1[,"p3.ini"] <- as.integer (sapply (p3, "[", 1))
+> datos1[,"p3.end"] <- as.integer (sapply (p3, "[", 2))
+> 
+> table (datos1$lon)
+
+    3     4     5     6     8     9 
+18791  9824    15    13     1     1 
+> datos1[datos1$lon > 4,] ## MORE THAN 2 MATURE SEQUENCES !!!!!
+                                                                                                                                                                                                          str.names
+1039                                                                                                          osa-MIR319a (-101.50)   [osa-miR319a-5p:56-76] [osa-miR319a-3p:117-137] [osa-miR319a-3p.2-3p:162-181]
+1064                                                                                                              osa-MIR169i (-94.00)   [osa-miR169i-5p.2:21-42] [osa-miR169i-5p.1:44-64] [osa-miR169i-3p:135-156]
+1611                                                                                                              osa-MIR444a (-90.80)   [osa-miR444a-5p:20-40] [osa-miR444a-3p.2:94-114] [osa-miR444a-3p.1:99-119]
+3275                                                                                                               ppt-MIR319d (-93.40)   [ppt-miR319d-5p.1:8-27] [ppt-miR319d-5p.2:29-49] [ppt-miR319d-3p:145-165]
+4284                                                                                                                ath-MIR829 (-77.50)   [ath-miR829-5p:54-74] [ath-miR829-3p.1:110-133] [ath-miR829-3p.2:134-154]
+4569                                                                                                                         cre-MIR908 (-157.80)   [cre-miR908.1:9-30] [cre-miR908.2:71-92] [cre-miR908.3:161-179]
+4570                                                                                                                     cre-MIR909 (-453.30)   [cre-miR909.2:84-104] [cre-miR909.1:167-187] [cre-miR909.3:370-390]
+5057                                                                                                                cre-MIR1150 (-331.40)   [cre-miR1150.3:295-315] [cre-miR1150.2:331-350] [cre-miR1150.1:337-357]
+5061                                                                                  cre-MIR1153 (-101.60)   [cre-miR1153-5p.1:5-26] [cre-miR1153-5p.2:25-45] [cre-miR1153-3p.2:91-112] [cre-miR1153-3p.1:111-129]
+5067                                                                                                                cre-MIR1160 (-453.60)   [cre-miR1160.2:116-136] [cre-miR1160.1:332-351] [cre-miR1160.3:373-393]
+5109                                                                                                 mcmv-mir-m108-2 (-46.40)   [mcmv-miR-m108-2-5p.2:3-23] [mcmv-miR-m108-2-5p.1:16-38] [mcmv-miR-m108-2-3p:53-75]
+5802                                                                                                                  osa-MIR444d (-80.30)   [osa-miR444d.3:82-102] [osa-miR444d.2:103-123] [osa-miR444d.1:108-128]
+7005                                                                                                                       osa-MIR1850 (-77.80)   [osa-miR1850.1:18-38] [osa-miR1850.2:43-63] [osa-miR1850.3:73-94]
+7076                                                                                                                       ath-MIR1886 (-48.70)   [ath-miR1886.1:4-24] [ath-miR1886.2:13-33] [ath-miR1886.3:84-104]
+10511                                                                                                        mtr-MIR2592a (-136.30)   [mtr-miR2592a-5p:44-63] [mtr-miR2592a-3p:194-214] [mtr-miR2592a.2-3p:215-235]
+12606                                                                             mmu-mir-3102 (-57.84)   [mmu-miR-3102-5p:1-22] [mmu-miR-3102-5p.2-5p:23-43] [mmu-miR-3102-3p.2-3p:60-80] [mmu-miR-3102-3p:81-103]
+13003                                                                                       aly-MIR161 (-53.10)   [aly-miR161-5p.2:3-23] [aly-miR161-5p.1:11-31] [aly-miR161-3p.1:94-112] [aly-miR161-3p.2:102-122]
+13078                                                                                  aly-MIR774a (-35.71)   [aly-miR774a-5p.1:25-45] [aly-miR774a-5p.2:33-53] [aly-miR774a-3p.2:86-106] [aly-miR774a-3p.1:94-114]
+13119                                                                                    aly-MIR163 (-200.10)   [aly-miR163-5p.1:51-70] [aly-miR163-5p.2:71-91] [aly-miR163-3p.2:362-382] [aly-miR163-3p.1:383-405]
+13136                                                                               aly-MIR3441 (-147.00)   [aly-miR3441-5p.2:19-39] [aly-miR3441-5p.1:42-62] [aly-miR3441-3p.1:212-232] [aly-miR3441-3p.2:235-255]
+13140                                                                               aly-MIR3445 (-118.90)   [aly-miR3445-5p.2:37-57] [aly-miR3445-5p.1:56-76] [aly-miR3445-3p.1:148-168] [aly-miR3445-3p.2:167-187]
+17206                                                                                                               aca-mir-202 (-37.80)   [aca-miR-202-5p:14-34] [aca-miR-202-5p.2:48-69] [aca-miR-202-3p.1:51-70]
+23445                                                                               bdi-MIR5174e (-64.60)   [bdi-miR5174e-5p.2:12-32] [bdi-miR5174e-5p.1:17-37] [bdi-miR5174e-3p.1:73-93] [bdi-miR5174e-3p.2:78-98]
+23451                            bdi-MIR159b (-87.70)   [bdi-miR159b-5p.1:14-34] [bdi-miR159b-5p.2:35-57] [bdi-miR159b-5p.3:58-78] [bdi-miR159b-3p.3:121-141] [bdi-miR159b-3p.2:142-163] [bdi-miR159b-3p.1:164-184]
+23478 bdi-MIR7711 (-282.40)   [bdi-miR7711-5p.1:15-38] [bdi-miR7711-5p.2:39-62] [bdi-miR7711-5p.3:63-86] [bdi-miR7711-5p.4:84-107] [bdi-miR7711-3p.4:445-468] [bdi-miR7711-3p.3:466-489] [bdi-miR7711-3p.1:514-537]
+23496                                                                            bdi-MIR7725b (-67.10)   [bdi-miR7725b-5p.1:11-31] [bdi-miR7725b-5p.2:32-52] [bdi-miR7725b-3p.2:90-113] [bdi-miR7725b-3p.1:114-134]
+23515                                                                                bdi-MIR7741 (-70.96)   [bdi-miR7741-5p.1:12-32] [bdi-miR7741-5p.2:28-48] [bdi-miR7741-3p.2:145-165] [bdi-miR7741-3p.1:161-181]
+23533                                                                            bdi-MIR7757 (-273.80)   [bdi-miR7757-5p.1:80-100] [bdi-miR7757-5p.2:101-121] [bdi-miR7757-3p.2:434-454] [bdi-miR7757-3p.1:455-475]
+23554                                                                                 bdi-MIR7776 (-80.60)   [bdi-miR7776-5p.1:13-32] [bdi-miR7776-5p.2:33-53] [bdi-miR7776-3p.2:97-117] [bdi-miR7776-3p.1:118-137]
+23555                                                                                 bdi-MIR7777 (-71.80)   [bdi-miR7777-5p.1:14-34] [bdi-miR7777-5p.2:35-55] [bdi-miR7777-3p.2:99-119] [bdi-miR7777-3p.1:120-140]
+      lon              id parentesis                        p5                         p3                p5.id p5.ini p5.end                p3.id p3.ini p3.end
+1039    5     osa-MIR319a  (-101.50)      osa-miR319a-5p:56-76     osa-miR319a-3p:117-137       osa-miR319a-5p     56     76       osa-miR319a-3p    117    137
+1064    5     osa-MIR169i   (-94.00)    osa-miR169i-5p.2:21-42     osa-miR169i-5p.1:44-64     osa-miR169i-5p.2     21     42     osa-miR169i-5p.1     44     64
+1611    5     osa-MIR444a   (-90.80)      osa-miR444a-5p:20-40    osa-miR444a-3p.2:94-114       osa-miR444a-5p     20     40     osa-miR444a-3p.2     94    114
+3275    5     ppt-MIR319d   (-93.40)     ppt-miR319d-5p.1:8-27     ppt-miR319d-5p.2:29-49     ppt-miR319d-5p.1      8     27     ppt-miR319d-5p.2     29     49
+4284    5      ath-MIR829   (-77.50)       ath-miR829-5p:54-74    ath-miR829-3p.1:110-133        ath-miR829-5p     54     74      ath-miR829-3p.1    110    133
+4569    5      cre-MIR908  (-157.80)         cre-miR908.1:9-30         cre-miR908.2:71-92         cre-miR908.1      9     30         cre-miR908.2     71     92
+4570    5      cre-MIR909  (-453.30)       cre-miR909.2:84-104       cre-miR909.1:167-187         cre-miR909.2     84    104         cre-miR909.1    167    187
+5057    5     cre-MIR1150  (-331.40)     cre-miR1150.3:295-315      cre-miR1150.2:331-350        cre-miR1150.3    295    315        cre-miR1150.2    331    350
+5061    6     cre-MIR1153  (-101.60)     cre-miR1153-5p.1:5-26     cre-miR1153-5p.2:25-45     cre-miR1153-5p.1      5     26     cre-miR1153-5p.2     25     45
+5067    5     cre-MIR1160  (-453.60)     cre-miR1160.2:116-136      cre-miR1160.1:332-351        cre-miR1160.2    116    136        cre-miR1160.1    332    351
+5109    5 mcmv-mir-m108-2   (-46.40) mcmv-miR-m108-2-5p.2:3-23 mcmv-miR-m108-2-5p.1:16-38 mcmv-miR-m108-2-5p.2      3     23 mcmv-miR-m108-2-5p.1     16     38
+5802    5     osa-MIR444d   (-80.30)      osa-miR444d.3:82-102      osa-miR444d.2:103-123        osa-miR444d.3     82    102        osa-miR444d.2    103    123
+7005    5     osa-MIR1850   (-77.80)       osa-miR1850.1:18-38        osa-miR1850.2:43-63        osa-miR1850.1     18     38        osa-miR1850.2     43     63
+7076    5     ath-MIR1886   (-48.70)        ath-miR1886.1:4-24        ath-miR1886.2:13-33        ath-miR1886.1      4     24        ath-miR1886.2     13     33
+10511   5    mtr-MIR2592a  (-136.30)     mtr-miR2592a-5p:44-63    mtr-miR2592a-3p:194-214      mtr-miR2592a-5p     44     63      mtr-miR2592a-3p    194    214
+12606   6    mmu-mir-3102   (-57.84)      mmu-miR-3102-5p:1-22 mmu-miR-3102-5p.2-5p:23-43      mmu-miR-3102-5p      1     22 mmu-miR-3102-5p.2-5p     23     43
+13003   6      aly-MIR161   (-53.10)      aly-miR161-5p.2:3-23      aly-miR161-5p.1:11-31      aly-miR161-5p.2      3     23      aly-miR161-5p.1     11     31
+13078   6     aly-MIR774a   (-35.71)    aly-miR774a-5p.1:25-45     aly-miR774a-5p.2:33-53     aly-miR774a-5p.1     25     45     aly-miR774a-5p.2     33     53
+13119   6      aly-MIR163  (-200.10)     aly-miR163-5p.1:51-70      aly-miR163-5p.2:71-91      aly-miR163-5p.1     51     70      aly-miR163-5p.2     71     91
+13136   6     aly-MIR3441  (-147.00)    aly-miR3441-5p.2:19-39     aly-miR3441-5p.1:42-62     aly-miR3441-5p.2     19     39     aly-miR3441-5p.1     42     62
+13140   6     aly-MIR3445  (-118.90)    aly-miR3445-5p.2:37-57     aly-miR3445-5p.1:56-76     aly-miR3445-5p.2     37     57     aly-miR3445-5p.1     56     76
+17206   5     aca-mir-202   (-37.80)      aca-miR-202-5p:14-34     aca-miR-202-5p.2:48-69       aca-miR-202-5p     14     34     aca-miR-202-5p.2     48     69
+23445   6    bdi-MIR5174e   (-64.60)   bdi-miR5174e-5p.2:12-32    bdi-miR5174e-5p.1:17-37    bdi-miR5174e-5p.2     12     32    bdi-miR5174e-5p.1     17     37
+23451   8     bdi-MIR159b   (-87.70)    bdi-miR159b-5p.1:14-34     bdi-miR159b-5p.2:35-57     bdi-miR159b-5p.1     14     34     bdi-miR159b-5p.2     35     57
+23478   9     bdi-MIR7711  (-282.40)    bdi-miR7711-5p.1:15-38     bdi-miR7711-5p.2:39-62     bdi-miR7711-5p.1     15     38     bdi-miR7711-5p.2     39     62
+23496   6    bdi-MIR7725b   (-67.10)   bdi-miR7725b-5p.1:11-31    bdi-miR7725b-5p.2:32-52    bdi-miR7725b-5p.1     11     31    bdi-miR7725b-5p.2     32     52
+23515   6     bdi-MIR7741   (-70.96)    bdi-miR7741-5p.1:12-32     bdi-miR7741-5p.2:28-48     bdi-miR7741-5p.1     12     32     bdi-miR7741-5p.2     28     48
+23533   6     bdi-MIR7757  (-273.80)   bdi-miR7757-5p.1:80-100   bdi-miR7757-5p.2:101-121     bdi-miR7757-5p.1     80    100     bdi-miR7757-5p.2    101    121
+23554   6     bdi-MIR7776   (-80.60)    bdi-miR7776-5p.1:13-32     bdi-miR7776-5p.2:33-53     bdi-miR7776-5p.1     13     32     bdi-miR7776-5p.2     33     53
+23555   6     bdi-MIR7777   (-71.80)    bdi-miR7777-5p.1:14-34     bdi-miR7777-5p.2:35-55     bdi-miR7777-5p.1     14     34     bdi-miR7777-5p.2     35     55
+> 
+> ################################################################################
+> 
+> ### MERGE DATASETS
+> if (any (datos$id != datos1$id)) stop = "WRONG ORDER"
+> 
+> datos <- cbind (datos, datos1[,c ("p5.id", "p3.id", "p5.ini", "p5.end",  "p3.ini", "p3.end")])
+> 
+> ##############################
+> 
+> head (datos)
+                                                     seq.names         id       acc lon spe         p5.id         p3.id p5.ini p5.end p3.ini p3.end
+1   cel-let-7 MI0000001 Caenorhabditis elegans let-7 stem-loop  cel-let-7 MI0000001  99 cel  cel-let-7-5p  cel-let-7-3p     17     38     60     81
+2   cel-lin-4 MI0000002 Caenorhabditis elegans lin-4 stem-loop  cel-lin-4 MI0000002  94 cel  cel-lin-4-5p  cel-lin-4-3p     16     36     55     76
+3   cel-mir-1 MI0000003 Caenorhabditis elegans miR-1 stem-loop  cel-mir-1 MI0000003  96 cel  cel-miR-1-5p  cel-miR-1-3p     21     42     61     81
+4   cel-mir-2 MI0000004 Caenorhabditis elegans miR-2 stem-loop  cel-mir-2 MI0000004  98 cel  cel-miR-2-5p  cel-miR-2-3p     20     41     61     83
+5 cel-mir-34 MI0000005 Caenorhabditis elegans miR-34 stem-loop cel-mir-34 MI0000005  97 cel cel-miR-34-5p cel-miR-34-3p     16     37     53     74
+6 cel-mir-35 MI0000006 Caenorhabditis elegans miR-35 stem-loop cel-mir-35 MI0000006  97 cel cel-miR-35-5p cel-miR-35-3p     22     44     61     82
+> sapply (datos, class)
+  seq.names          id         acc         lon         spe       p5.id       p3.id      p5.ini      p5.end      p3.ini      p3.end 
+"character" "character" "character"   "integer" "character" "character" "character"   "integer"   "integer"   "integer"   "integer" 
+> 
+> table (is.na (datos$p5.end))
+
+FALSE 
+28645 
+> table (is.na (datos$p5.ini))
+
+FALSE 
+28645 
+> 
+> table (is.na (datos$p3.end))
+
+FALSE  TRUE 
+ 9854 18791 
+> table (is.na (datos$p3.ini))
+
+FALSE  TRUE 
+ 9854 18791 
+> table (is.na (datos$p3.id))
+
+FALSE  TRUE 
+ 9854 18791 
+> 
+> table (duplicated (datos[,"p5.id"]))
+
+FALSE  TRUE 
+26607  2038 
+> table (duplicated (datos[,"p3.id"]))
+
+FALSE  TRUE 
+ 9220 19425 
+> 
+> ################################################################################
+> 
+> ### OVERLAPPING p5 p3
+> ## It seems that some p3 or p3 mature sequences may have different ISOFORMS
+> ## Those are the overlapping ones
+> malos <- datos[,"p5.end"] > datos[,"p3.ini"]
+> table (malos, exclude = NULL)
+malos
+FALSE  TRUE  <NA> 
+ 9834    20 18791 
+> malos <- which (malos)
+> malos
+ [1]   184  2185  4345  5054  5061  5109  5800  5801  6610  7076 11566 13003 13078 13140 19549 23445 23515 25603 25623 25671
+> 
+> ## There are few of this weird miRNAs
+> ## and non of them in human
+> ## We KEEP JUST THE FIRST of the mature sequences 
+> datos[malos, c ("p3.id",  "p3.ini", "p3.end")] <- NA
+> 
+> ################################################################################
+> 
+> ### DEFINE CENTRAL POSITION
+> datos[,"center"] <- round ((datos[,"p5.end"] + datos[,"p3.ini"]) / 2)
+> datos[is.na (datos$center), "center"] <- datos[is.na (datos$center), "lon"]  ## so that we will always assign the p5 mature seq
+> 
+> ################################################################################
+> 
+> ### EXPLORE ALPHABET
+> malos <- NULL
+> for (l in setdiff (alphabet (seq), c ("A", "C", "G", "U"))) {
++     pos <- grep (l, seq, fixed = TRUE)  ##fixed = TRUE so that + and . are not taken as part of a regular expression
++     malos <- c (malos, pos)
++ }
+> malos <- unique (malos)
+> length (malos)
+[1] 97
+> datos[,"ambiguous"] <- FALSE
+> datos[malos, "ambiguous"] <- TRUE
+> 
+> ### RNA to DNA
+> seq <- DNAStringSet (seq)
+> 
+> 
+> ################################################################################
+> 
+> ### RENAME SEQUENCES
+> table (names (seq) == datos$seq.names)
+
+ TRUE 
+28645 
+> table (duplicated (datos$id))
+
+FALSE 
+28645 
+> 
+> names (seq) <- rownames (datos) <- datos$id
+> 
+> 
+> 
+> ################################################################################
+> ### FINAL FILTERING
+> ################################################################################
+> 
+> ### FILTERING out hairpins with ambiguous nucleotides
+> seq <- seq[!datos$ambiguous,]
+> datos <- datos[!datos$ambiguous,]
+> 
+> ### FILTERING SPECIES
+> ##slist <- c ("hsa", "mmu")
+> slist <- c ("hsa")
+> touse <- datos$spe %in% slist
+> table (touse)
+touse
+FALSE  TRUE 
+26667  1881 
+> 
+> datos <- datos[touse,]
+> seq <- seq[touse]
+> 
+> table (names (seq) == rownames (datos))
+
+TRUE 
+1881 
+> 
+> 
+> ### SAVE
+> setwd (.job$dir$proces)
+> writeXStringSet (seq, filepath = "mirbase_hairpin_clean.fa", compress = FALSE, format = "fasta", width = 10000)
+> 
+> save (datos, file = "mirbase_hairpin_clean_info.RData")
+> 
+> ###EXIT
+> warnings ()
+NULL
+> sessionInfo ()
+R version 3.2.0 (2015-04-16)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 14.04.2 LTS
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=es_ES.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=es_ES.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=es_ES.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=es_ES.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats4    parallel  stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] Biostrings_2.36.1   XVector_0.8.0       IRanges_2.2.1       S4Vectors_0.6.0     BiocGenerics_0.14.0
+
+loaded via a namespace (and not attached):
+[1] zlibbioc_1.14.0
+> q ("no")
+> proc.time()
+   user  system elapsed 
+  5.167   0.135  10.555 

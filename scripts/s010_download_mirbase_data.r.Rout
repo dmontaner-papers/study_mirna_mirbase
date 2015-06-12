@@ -22,7 +22,7 @@ Type 'q()' to quit R.
 > ##Study of miRBase sequences
 > 
 > date ()
-[1] "Thu Jun 11 13:39:01 2015"
+[1] "Fri Jun 12 13:41:53 2015"
 > Sys.info ()[c("nodename", "user")]
    nodename        user 
       "lap" "dmontaner" 
@@ -92,7 +92,7 @@ $idsep
 > ###DATA
 > setwd (file.path (.job$dir$rawdat))
 > dir ()
-[1] "hairpin.fa.gz" "hsa.gff3"      "mature.fa.gz" 
+character(0)
 > 
 > system.time (download.file (url = "ftp://mirbase.org/pub/mirbase/CURRENT/hairpin.fa.gz",    destfile = "hairpin.fa.gz"))
 trying URL 'ftp://mirbase.org/pub/mirbase/CURRENT/hairpin.fa.gz'
@@ -101,7 +101,7 @@ ftp data connection made, file length 1207144 bytes
 downloaded 1.2 MB
 
    user  system elapsed 
-  0.016   0.005   1.210 
+  0.013   0.017   1.362 
 > system.time (download.file (url = "ftp://mirbase.org/pub/mirbase/CURRENT/mature.fa.gz",     destfile = "mature.fa.gz"))
 trying URL 'ftp://mirbase.org/pub/mirbase/CURRENT/mature.fa.gz'
 ftp data connection made, file length 590888 bytes
@@ -109,7 +109,7 @@ ftp data connection made, file length 590888 bytes
 downloaded 577 KB
 
    user  system elapsed 
-  0.004   0.010   0.855 
+  0.000   0.015   0.982 
 > system.time (download.file (url = "ftp://mirbase.org/pub/mirbase/CURRENT/genomes/hsa.gff3", destfile = "hsa.gff3"))
 trying URL 'ftp://mirbase.org/pub/mirbase/CURRENT/genomes/hsa.gff3'
 ftp data connection made, file length 522631 bytes
@@ -117,7 +117,7 @@ ftp data connection made, file length 522631 bytes
 downloaded 510 KB
 
    user  system elapsed 
-  0.003   0.008   0.773 
+  0.012   0.005   0.928 
 > 
 > 
 > ###EXIT
@@ -137,4 +137,4 @@ attached base packages:
 > q ("no")
 > proc.time()
    user  system elapsed 
-  0.244   0.052   3.501 
+  0.227   0.067   3.492 

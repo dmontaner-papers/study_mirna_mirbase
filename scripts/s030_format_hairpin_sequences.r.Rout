@@ -27,7 +27,7 @@ Type 'q()' to quit R.
 > ## Mean length for a hairpin 103
 > 
 > date ()
-[1] "Thu Jun 11 13:39:35 2015"
+[1] "Fri Jun 12 13:42:15 2015"
 > Sys.info ()[c("nodename", "user")]
    nodename        user 
       "lap" "dmontaner" 
@@ -249,7 +249,7 @@ cel-mir-1 MI0000003 Caenorhabditis elegans miR-1 stem-loop
 [1] "."
 [1] 0
    user  system elapsed 
-  0.233   0.000   0.233 
+  0.231   0.004   0.235 
 > table (duplicated (malos)) ## some duplicates
 
 FALSE  TRUE 
@@ -395,4 +395,4 @@ loaded via a namespace (and not attached):
 > q ("no")
 > proc.time()
    user  system elapsed 
-  3.386   0.058   3.990 
+  3.331   0.062   3.383 
